@@ -1,137 +1,102 @@
-// pages/EditTask.tsx
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { FormLayout } from "../components/layout/FormLayout";
+import { FormInput, FormSelect, FormTextarea } from "../components/common/"; //Cambiar después porque exporta todo
+import { LoadingSpinner } from "../components/common/LoadingSpinner";
+import { useForm } from "../hooks/useForm";
+import { apiService } from "../services/api.service";
 import type { Task } from "../types/task";
 
 export default function EditTask() {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [status, setStatus] = useState("PENDING");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const { id } = useParams<{ id: string }>();
+  const [initialLoading, setInitialLoading] = useState(true);
+
+  const {
+    values,
+    loading,
+    error,
+    handleChange,
+    handleSubmit,
+    setValues,
+    setError,
+  } = useForm({
+    initialValues: {
+      title: "",
+      description: "",
+      status: "PENDING",
+    },
+    onSubmit: async (values) => {
+      await apiService.updateTask(Number(id), values);
+    },
+    redirectPath: "/tasks",
+  });
 
   useEffect(() => {
+    const fetchTask = async () => {
+      try {
+        const tasks = await apiService.getTasks();
+        const task: Task | undefined = tasks.find((t: Task) => t.id === Number(id));
+
+        if (task) {
+          setValues({
+            title: task.title,
+            description: task.description || "",
+            status: task.status,
+          });
+        } else {
+          setError("Tarea no encontrada");
+        }
+      } catch (err) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("Error desconocido al cargar la tarea");
+        }
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+
     fetchTask();
   }, [id]);
 
-  const fetchTask = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`http://localhost:3000/tasks?assignedToId=${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+  if (initialLoading) return <LoadingSpinner />;
 
-      if (!response.ok) throw new Error("Error al cargar tarea");
-
-      const tasks: Task[] = await response.json();
-      const task = tasks.find((t) => t.id === Number(id));
-      
-      if (task) {
-        setTitle(task.title);
-        setDescription(task.description || "");
-        setStatus(task.status);
-      }
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("Error inesperado");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`http://localhost:3000/tasks/${id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ title, description, status }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Error al actualizar");
-      }
-
-      navigate("/tasks");
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("Error inesperado");
-      }
-    }
-  };
-
-  if (loading) return <div style={{ padding: "20px" }}>Cargando...</div>;
-
-  
   return (
-    <div style={{ padding: "20px", maxWidth: "600px", margin: "0 auto" }}>
-      <h1>✏️ Editar Tarea</h1>
-      
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: "15px" }}>
-          <label>Título *</label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-            style={{ width: "100%", padding: "8px" }}
-          />
-        </div>
+    <FormLayout
+      title="✏️ Editar Tarea"
+      onSubmit={handleSubmit}
+      submitText="Guardar Cambios"
+      loading={loading}
+      error={error}
+      cancelLink="/tasks"
+    >
+      <FormInput
+        label="Título"
+        name="title"
+        value={values.title}
+        onChange={handleChange}
+        required
+      />
 
-        <div style={{ marginBottom: "15px" }}>
-          <label>Descripción</label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={4}
-            style={{ width: "100%", padding: "8px" }}
-          />
-        </div>
+      <FormTextarea
+        label="Descripción"
+        name="description"
+        value={values.description}
+        onChange={handleChange}
+      />
 
-        <div style={{ marginBottom: "15px" }}>
-          <label>Estado *</label>
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            style={{ width: "100%", padding: "8px" }}
-          >
-            <option value="PENDING">Pendiente</option>
-            <option value="IN_PROGRESS">En Progreso</option>
-            <option value="COMPLETED">Completada</option>
-          </select>
-        </div>
-
-        {error && <p style={{ color: "red" }}>{error}</p>}
-
-        <div style={{ display: "flex", gap: "10px" }}>
-          <button type="submit" style={{ padding: "10px 20px" }}>
-            Guardar Cambios
-          </button>
-          <button 
-            type="button" 
-            onClick={() => navigate("/tasks")}
-            style={{ padding: "10px 20px" }}
-          >
-            Cancelar
-          </button>
-        </div>
-      </form>
-    </div>
+      <FormSelect
+        label="Estado"
+        name="status"
+        value={values.status}
+        onChange={handleChange}
+        options={[
+          { value: "PENDING", label: "Pendiente" },
+          { value: "IN_PROGRESS", label: "En Progreso" },
+          { value: "COMPLETED", label: "Completada" },
+        ]}
+      />
+    </FormLayout>
   );
 }

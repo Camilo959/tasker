@@ -5,5 +5,5 @@ export interface User {
   email: string;
   role: "ADMIN" | "EMPLOYEE";
   isActive: boolean;
-  createdAt?: string;
+  createdAt: string;
 }
