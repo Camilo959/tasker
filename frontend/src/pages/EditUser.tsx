@@ -1,4 +1,4 @@
-// pages/EditDepartment.tsx - Material UI Version
+// pages/EditUser.tsx - Material UI Version
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -9,6 +9,7 @@ import {
   Button,
   Box,
   Alert,
+  MenuItem,
   Stack,
   CircularProgress,
 } from "@mui/material";
@@ -18,60 +19,71 @@ import {
 } from "@mui/icons-material";
 import { MainLayout } from "../components/layout/MainLayout";
 import { apiService } from "../services/api.service";
-import type { Department } from "../types/department";
+import type { User } from "../types/user";
 
-export default function EditDepartment() {
+export default function EditUser() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [name, setName] = useState("");
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    role: "EMPLOYEE",
+  });
   const [initialLoading, setInitialLoading] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    fetchDepartment();
+    fetchUser();
   }, [id]);
 
-  const fetchDepartment = async () => {
+  const fetchUser = async () => {
     try {
       setInitialLoading(true);
-      const departments: Department[] = await apiService.getUsers();
-      const department = departments.find((d) => d.id === Number(id));
+      const users: User[] = await apiService.getUsers();
+      const user = users.find((u) => u.id === Number(id));
 
-      if (department) {
-        setName(department.name);
+      if (user) {
+        setFormData({
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        });
       } else {
-        setError("Department not found");
+        setError("User not found");
       }
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError("Failed to load department");
+        setError("Failed to load user");
       }
     } finally {
       setInitialLoading(false);
     }
   };
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-
-    if (!name.trim()) {
-      setError("Department name is required");
-      return;
-    }
-
     setLoading(true);
+
     try {
-      await apiService.updateDepartment(Number(id), { name: name.trim() });
-      navigate("/departments");
+      await apiService.updateUser(Number(id), formData);
+      navigate("/users");
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError("Failed to update department");
+        setError("Failed to update user");
       }
     } finally {
       setLoading(false);
@@ -103,33 +115,57 @@ export default function EditDepartment() {
         <Box sx={{ mb: 4 }}>
           <Button
             startIcon={<ArrowBackIcon />}
-            onClick={() => navigate("/departments")}
+            onClick={() => navigate("/users")}
             sx={{ mb: 2 }}
           >
-            Back to Departments
+            Back to Users
           </Button>
           <Typography variant="h4" fontWeight="bold" gutterBottom>
-            Edit Department
+            Edit User
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Update department information
+            Update user information and permissions
           </Typography>
         </Box>
 
         <Paper sx={{ p: 4, borderRadius: 3 }}>
           <Box component="form" onSubmit={handleSubmit} noValidate>
             <Stack spacing={3}>
-              {/* Department Name Field */}
+              {/* Name Field */}
               <TextField
                 fullWidth
-                label="Department Name"
+                label="Full Name"
                 name="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                value={formData.name}
+                onChange={handleChange}
                 required
                 autoFocus
-                helperText="Enter a descriptive name for this department"
               />
+
+              {/* Email Field */}
+              <TextField
+                fullWidth
+                label="Email Address"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+              />
+
+              {/* Role Field */}
+              <TextField
+                fullWidth
+                select
+                label="Role"
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                helperText="Change user access level"
+              >
+                <MenuItem value="EMPLOYEE">Employee</MenuItem>
+                <MenuItem value="ADMIN">Administrator</MenuItem>
+              </TextField>
 
               {/* Error Alert */}
               {error && (
@@ -142,7 +178,7 @@ export default function EditDepartment() {
               <Stack direction="row" spacing={2} justifyContent="flex-end">
                 <Button
                   variant="outlined"
-                  onClick={() => navigate("/departments")}
+                  onClick={() => navigate("/users")}
                   disabled={loading}
                 >
                   Cancel
@@ -161,25 +197,6 @@ export default function EditDepartment() {
               </Stack>
             </Stack>
           </Box>
-        </Paper>
-
-        {/* Warning Box */}
-        <Paper
-          sx={{
-            p: 3,
-            mt: 3,
-            bgcolor: "warning.lighter",
-            border: 1,
-            borderColor: "warning.light",
-          }}
-        >
-          <Typography variant="body2" color="warning.dark" fontWeight={600} gutterBottom>
-            ⚠️ Important:
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Changing the department name will affect all associated tasks and users. 
-            Make sure to inform relevant team members about this change.
-          </Typography>
         </Paper>
       </Container>
     </MainLayout>
