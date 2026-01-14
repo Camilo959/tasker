@@ -22,8 +22,14 @@ model User {
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
 
-  // 🔹 Relación con Task
-  tasks     Task[]   @relation("UserTasks")
+  // 🔹 Tareas asignadas al usuario
+  assignedTasks Task[] @relation("AssignedTasks")
+
+  // 🔹 Tareas solicitadas por el usuario
+  requestedTasks Task[] @relation("RequestedTasks")
+
+  // 🔹 Registros de tiempo realizados por el usuario
+  timeEntries TimeEntry[]
 }
 
 model Department {
@@ -32,26 +38,49 @@ model Department {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // 🔹 Relación con Task
-  tasks     Task[]   @relation("DepartmentTasks")
+  tasks     Task[]
 }
 
 model Task {
   id            Int        @id @default(autoincrement())
   title         String
   description   String?
-  
+
+  // 🔹 Quién solicitó la tarea
+  requestedById Int
+  requestedBy   User       @relation("RequestedTasks", fields: [requestedById],  references: [id])
+
+  // 🔹 Usuario responsable
   assignedToId  Int
-  assignedTo    User       @relation("UserTasks", fields: [assignedToId], references: [id])
-  
+  assignedTo    User       @relation("AssignedTasks",fields: [assignedToId],references: [id])
+
   departmentId  Int?
-  department    Department? @relation("DepartmentTasks", fields: [departmentId], references: [id])
-  
+  department    Department? @relation(fields: [departmentId], references: [id])
+
   status        TaskStatus @default(PENDING)
+
+  // 🔹 Registros de tiempo
+  timeEntries   TimeEntry[]
+
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
 }
 
+model TimeEntry {
+  id          Int      @id @default(autoincrement())
+
+  taskId     Int
+  task       Task     @relation(fields: [taskId], references: [id])
+
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id])
+
+  startTime  DateTime
+  hoursSpent Float
+  workDescription String
+
+  createdAt DateTime @default(now())
+}
 
 enum TaskStatus {
   PENDING

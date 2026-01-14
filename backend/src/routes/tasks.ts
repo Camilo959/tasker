@@ -16,6 +16,7 @@ router.post("/", authMiddleware, async (req, res) => {
         title,
         description,
         assignedToId,
+        requestedById: req.user!.userId,
         departmentId,
       },
     });
@@ -66,7 +67,7 @@ router.get("/", authMiddleware, async (req, res) => {
 
   const tasks = await prisma.task.findMany({
     where: filters,
-    include: { assignedTo: true, department: true },
+    include: { assignedTo: true, department: true, requestedBy: true  },
   });
 
   res.json(tasks);

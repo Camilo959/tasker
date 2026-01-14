@@ -69,7 +69,7 @@ export default function Tasks() {
       // Calculate stats
       const totalTasks = tasksData.length;
       const inProgress = tasksData.filter((t: Task) => t.status === "IN_PROGRESS").length;
-      const completed = tasksData.filter((t: Task) => t.status === "COMPLETED").length;
+      const completed = tasksData.filter((t: Task) => t.status === "DONE").length;
       const pending = tasksData.filter((t: Task) => t.status === "PENDING").length;
       
       setStats({
@@ -366,6 +366,7 @@ export default function Tasks() {
                 <TableRow sx={{ bgcolor: "grey.50" }}>
                   <TableCell>Task Name</TableCell>
                   <TableCell>Assigned To</TableCell>
+                  <TableCell>Requested By</TableCell> {/* 🔹 Nueva columna */}
                   <TableCell>Start Date</TableCell>
                   <TableCell>Status</TableCell>
                   <TableCell>Department</TableCell>
@@ -375,13 +376,13 @@ export default function Tasks() {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                    <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
                       <Typography color="text.secondary">Loading...</Typography>
                     </TableCell>
                   </TableRow>
                 ) : tasks.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                    <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
                       <Typography color="text.secondary">No tasks found</Typography>
                     </TableCell>
                   </TableRow>
@@ -414,6 +415,21 @@ export default function Tasks() {
                             </Typography>
                             <Typography variant="caption" color="text.secondary">
                               {task.assignedTo.email}
+                            </Typography>
+                          </Box>
+                        </Stack>
+                      </TableCell>
+                      <TableCell>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <Avatar sx={{ width: 28, height: 28, fontSize: 14 }}>
+                            {task.requestedBy.name.charAt(0)}
+                          </Avatar>
+                          <Box>
+                            <Typography variant="body2">
+                              {task.requestedBy.name}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {task.requestedBy.email}
                             </Typography>
                           </Box>
                         </Stack>
