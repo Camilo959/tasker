@@ -1,5 +1,7 @@
+// auth/AuthProvider.tsx
 import { useState, type ReactNode } from "react";
 import { AuthContext } from "./context";
+import { setGlobalLogout } from "./authBridge";
 
 interface User {
   userId: number;
@@ -33,6 +35,9 @@ export const AuthProvider = ({ children }: Props) => {
     setUser(null);
     setIsAuthenticated(false);
   };
+
+  // 👇 Registramos logout para axios
+  setGlobalLogout(logout);
 
   return (
     <AuthContext.Provider value={{ user, login, logout, isAuthenticated }}>

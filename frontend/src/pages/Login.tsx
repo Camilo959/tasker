@@ -20,11 +20,11 @@ import {
   Avatar,
 } from "@mui/material";
 import {
-  Visibility,
-  VisibilityOff,
-  TaskAlt as TaskAltIcon,
-  Google as GoogleIcon,
-} from "@mui/icons-material";
+  EyeIcon,
+  EyeOffIcon,
+  CheckIcon,
+  GoogleIcon,
+} from "../components/icons/index";
 import api from "../api/axios";
 import { useAuth } from "../auth/useAuth";
 
@@ -88,7 +88,7 @@ export default function Login() {
               height: 32,
             }}
           >
-            <TaskAltIcon sx={{ fontSize: 20 }} />
+            <CheckIcon size={20} />
           </Avatar>
           <Typography variant="h6" fontWeight="bold">
             CorporateTask
@@ -129,7 +129,7 @@ export default function Login() {
                 height: 64,
               }}
             >
-              <TaskAltIcon sx={{ fontSize: 36, color: "primary.main" }} />
+              <CheckIcon size={36} />
             </Avatar>
           </Box>
 
@@ -182,7 +182,7 @@ export default function Login() {
                       onClick={() => setShowPassword(!showPassword)}
                       edge="end"
                     >
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                      {showPassword ? <EyeOffIcon /> : <EyeIcon />}
                     </IconButton>
                   </InputAdornment>
                 ),

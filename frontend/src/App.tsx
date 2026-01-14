@@ -1,125 +1,132 @@
-// App.tsx
 import { Routes, Route, Navigate } from "react-router-dom";
+import { Suspense, lazy } from "react";
 import ProtectedRoute from "./auth/ProtectedRoute";
 import AdminRoute from "./auth/AdminRoute";
+import { CircularProgress, Box } from "@mui/material";
 
-// Auth
-import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
+// Lazy pages
+const Login = lazy(() => import("./pages/Login"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Tasks = lazy(() => import("./pages/Tasks"));
+const CreateTask = lazy(() => import("./pages/CreateTask"));
+const EditTask = lazy(() => import("./pages/EditTask"));
+const Departments = lazy(() => import("./pages/Departments"));
+const CreateDepartment = lazy(() => import("./pages/CreateDepartment"));
+const EditDepartment = lazy(() => import("./pages/EditDepartment"));
+const Users = lazy(() => import("./pages/Users"));
+const CreateUser = lazy(() => import("./pages/CreateUser"));
+const EditUser = lazy(() => import("./pages/EditUser"));
 
-// Tasks
-import Tasks from "./pages/Tasks";
-import CreateTask from "./pages/CreateTask";
-import EditTask from "./pages/EditTask";
-
-// Departments
-import Departments from "./pages/Departments";
-import CreateDepartment from "./pages/CreateDepartment";
-import EditDepartment from "./pages/EditDepartment";
-
-// Users
-import Users from "./pages/Users";
-import CreateUser from "./pages/CreateUser";
-import EditUser from "./pages/EditUser";
+const Loader = () => (
+  <Box
+    sx={{
+      height: "100vh",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+    }}
+  >
+    <CircularProgress />
+  </Box>
+);
 
 function App() {
   return (
-    <Routes>
-      {/* Rutas públicas */}
-      <Route path="/login" element={<Login />} />
-      
-      {/* Dashboard (protegido) */}
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
-      
-      {/* Tareas (todos los usuarios autenticados) */}
-      <Route
-        path="/tasks"
-        element={
-          <ProtectedRoute>
-            <Tasks />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/tasks/create"
-        element={
-          <ProtectedRoute>
-            <CreateTask />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/tasks/edit/:id"
-        element={
-          <ProtectedRoute>
-            <EditTask />
-          </ProtectedRoute>
-        }
-      />
-      
-      {/* Departamentos (solo admin) */}
-      <Route
-        path="/departments"
-        element={
-          <AdminRoute>
-            <Departments />
-          </AdminRoute>
-        }
-      />
-      <Route
-        path="/departments/create"
-        element={
-          <AdminRoute>
-            <CreateDepartment />
-          </AdminRoute>
-        }
-      />
-      <Route
-        path="/departments/edit/:id"
-        element={
-          <AdminRoute>
-            <EditDepartment />
-          </AdminRoute>
-        }
-      />
-      
-      {/* Usuarios (solo admin) */}
-      <Route
-        path="/users"
-        element={
-          <AdminRoute>
-            <Users />
-          </AdminRoute>
-        }
-      />
-      <Route
-        path="/users/create"
-        element={
-          <AdminRoute>
-            <CreateUser />
-          </AdminRoute>
-        }
-      />
-      <Route
-        path="/users/edit/:id"
-        element={
-          <AdminRoute>
-            <EditUser />
-          </AdminRoute>
-        }
-      />
-      
-      {/* Redirect */}
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
-    </Routes>
+    <Suspense fallback={<Loader />}>
+      <Routes>
+        {/* Público */}
+        <Route path="/login" element={<Login />} />
+
+        {/* Protegidas */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/tasks"
+          element={
+            <ProtectedRoute>
+              <Tasks />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tasks/create"
+          element={
+            <ProtectedRoute>
+              <CreateTask />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tasks/edit/:id"
+          element={
+            <ProtectedRoute>
+              <EditTask />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Admin */}
+        <Route
+          path="/departments"
+          element={
+            <AdminRoute>
+              <Departments />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/departments/create"
+          element={
+            <AdminRoute>
+              <CreateDepartment />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/departments/edit/:id"
+          element={
+            <AdminRoute>
+              <EditDepartment />
+            </AdminRoute>
+          }
+        />
+
+        <Route
+          path="/users"
+          element={
+            <AdminRoute>
+              <Users />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/users/create"
+          element={
+            <AdminRoute>
+              <CreateUser />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/users/edit/:id"
+          element={
+            <AdminRoute>
+              <EditUser />
+            </AdminRoute>
+          }
+        />
+
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      </Routes>
+    </Suspense>
   );
 }
 
