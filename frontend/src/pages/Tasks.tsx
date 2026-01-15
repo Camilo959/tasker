@@ -88,7 +88,7 @@ export default function Tasks() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "COMPLETED":
+      case "DONE":
         return "success";
       case "IN_PROGRESS":
         return "info";
@@ -101,8 +101,8 @@ export default function Tasks() {
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case "COMPLETED":
-        return "COMPLETED";
+      case "DONE":
+        return "DONE";
       case "IN_PROGRESS":
         return "IN PROGRESS";
       case "PENDING":
@@ -243,7 +243,7 @@ export default function Tasks() {
               <CardContent sx={{ display: "flex", justifyContent: "space-between" }}>
                 <Box>
                   <Typography variant="body2" color="text.secondary" gutterBottom>
-                    Completed
+                    Done
                   </Typography>
                   <Typography variant="h3" fontWeight="bold">
                     {loading ? "..." : stats.completed.toLocaleString()}

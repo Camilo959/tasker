@@ -103,7 +103,7 @@ export default function EditTask() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "COMPLETED":
+      case "DONE":
         return "success";
       case "IN_PROGRESS":
         return "info";
@@ -257,10 +257,10 @@ export default function EditTask() {
                     <Typography variant="body2">In Progress</Typography>
                   </Stack>
                 </MenuItem>
-                <MenuItem value="COMPLETED">
+                <MenuItem value="DONE">
                   <Stack direction="row" spacing={1} alignItems="center">
-                    <Chip label="COMPLETED" color="success" size="small" />
-                    <Typography variant="body2">Completed</Typography>
+                    <Chip label="DONE" color="success" size="small" />
+                    <Typography variant="body2">Done</Typography>
                   </Stack>
                 </MenuItem>
               </TextField>

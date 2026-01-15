@@ -1,12 +1,15 @@
-// src/types/express.d.ts
+// Extensión de tipos de Express para incluir usuario autenticado
+import { Request } from "express";
 
-import "express-serve-static-core";
-
-declare module "express-serve-static-core" {
-  interface Request {
-    user?: {
-      userId: number;
-      role: string;
-    };
+declare global {
+  namespace Express {
+    interface Request {
+      user?: {
+        userId: number;
+        role: string;
+      };
+    }
   }
 }
+
+export {};

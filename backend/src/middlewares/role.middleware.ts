@@ -13,3 +13,15 @@ export const isEmployee = (req: Request, res: Response, next: NextFunction) => {
     }
     next();
 };
+
+// Middleware para permitir tanto ADMIN como EMPLOYEE
+export const isAdminOrEmployee = (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    if (req.user?.role !== "ADMIN" && req.user?.role !== "EMPLOYEE") {
+        return res.status(403).json({ error: "Acceso denegado" });
+    }
+    next();
+};
