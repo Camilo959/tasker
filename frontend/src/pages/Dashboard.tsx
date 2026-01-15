@@ -11,7 +11,6 @@ import {
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import {
-  TrendingUp as TrendingUpIcon,
   Assignment as AssignmentIcon,
   People as PeopleIcon,
   CorporateFare as CorporateFareIcon,
@@ -39,39 +38,38 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
 
-  const fetchDashboardData = async () => {
-    try {
-      setLoading(true);
-      
-      // Fetch tasks
-      const tasksData = await apiService.getTasks();
-      const totalTasks = tasksData.length;
-      
-      // Fetch users and departments
-      let totalUsers = 0;
-      let totalDepartments = 0;
-      
-      if (user?.role === "ADMIN") {
-        const usersData = await apiService.getUsers();
-        const deptsData = await apiService.getDepartments();
-        totalUsers = usersData.length;
-        totalDepartments = deptsData.length;
+        // Fetch tasks
+        const tasksData = await apiService.getTasks();
+        const totalTasks = tasksData.length;
+
+        // Fetch users and departments
+        let totalUsers = 0;
+        let totalDepartments = 0;
+
+        if (user?.role === "ADMIN") {
+          const usersData = await apiService.getUsers();
+          const deptsData = await apiService.getDepartments();
+          totalUsers = usersData.length;
+          totalDepartments = deptsData.length;
+        }
+
+        setStats({
+          totalTasks,
+          totalUsers,
+          totalDepartments,
+        });
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      } finally {
+        setLoading(false);
       }
-      
-      setStats({
-        totalTasks,
-        totalUsers,
-        totalDepartments,
-      });
-    } catch (error) {
-      console.error("Error fetching dashboard data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+    fetchDashboardData();
+  }, [user]);
 
   return (
     <MainLayout>
@@ -102,7 +100,7 @@ export default function Dashboard() {
               onClick={() => navigate("/tasks")}
             >
               <CardContent>
-                <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
+                <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3   }}>
                   <Avatar
                     sx={{
                       bgcolor: "primary.light",
@@ -133,13 +131,9 @@ export default function Dashboard() {
                     color: "success.main",
                   }}
                 >
-                  <TrendingUpIcon sx={{ fontSize: 16 }} />
-                  <Typography variant="body2" fontWeight={600}>
-                    +12% from last month
-                  </Typography>
                 </Box>
                 
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 0 }}>
                   Click to view all tasks and their details
                 </Typography>
               </CardContent>
@@ -192,13 +186,9 @@ export default function Dashboard() {
                       color: "success.main",
                     }}
                   >
-                    <TrendingUpIcon sx={{ fontSize: 16 }} />
-                    <Typography variant="body2" fontWeight={600}>
-                      +8% new members
-                    </Typography>
                   </Box>
                   
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0 }}>
                     Manage user accounts and permissions
                   </Typography>
                 </CardContent>
@@ -252,13 +242,9 @@ export default function Dashboard() {
                       color: "success.main",
                     }}
                   >
-                    <TrendingUpIcon sx={{ fontSize: 16 }} />
-                    <Typography variant="body2" fontWeight={600}>
-                      +2 new departments
-                    </Typography>
                   </Box>
                   
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0 }}>
                     View and organize departments
                   </Typography>
                 </CardContent>

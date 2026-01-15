@@ -12,6 +12,10 @@ import {
   MenuItem,
   Stack,
   CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import {
   Save as SaveIcon,
@@ -28,40 +32,46 @@ export default function EditUser() {
     name: "",
     email: "",
     role: "EMPLOYEE",
+    isActive: true,
   });
+  
   const [initialLoading, setInitialLoading] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingActiveState, setPendingActiveState] = useState<boolean | null>(null);
 
   useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        setInitialLoading(true);
+        const users: User[] = await apiService.getUsers();
+        const user = users.find((u) => u.id === Number(id));
+
+        if (user) {
+          setFormData({
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            isActive: user.isActive,
+          });
+        } else {
+          setError("User not found");
+        }
+      } catch (err) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("Failed to load user");
+        }
+      } finally {
+        setInitialLoading(false);
+      }
+    };
     fetchUser();
   }, [id]);
 
-  const fetchUser = async () => {
-    try {
-      setInitialLoading(true);
-      const users: User[] = await apiService.getUsers();
-      const user = users.find((u) => u.id === Number(id));
 
-      if (user) {
-        setFormData({
-          name: user.name,
-          email: user.email,
-          role: user.role,
-        });
-      } else {
-        setError("User not found");
-      }
-    } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("Failed to load user");
-      }
-    } finally {
-      setInitialLoading(false);
-    }
-  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -166,6 +176,25 @@ export default function EditUser() {
                 <MenuItem value="EMPLOYEE">Employee</MenuItem>
                 <MenuItem value="ADMIN">Administrator</MenuItem>
               </TextField>
+              
+              {/* Active Status Field */}
+              <TextField
+                fullWidth
+                select
+                label="User Status"
+                value={formData.isActive ? "ACTIVE" : "INACTIVE"}
+                onChange={(e) => {
+                  const newState = e.target.value === "ACTIVE";
+                  if (newState !== formData.isActive) {
+                    setPendingActiveState(newState);
+                    setConfirmOpen(true);
+                  }
+                }}
+                helperText="Deactivate users instead of deleting them"
+              >
+                <MenuItem value="ACTIVE">Active</MenuItem>
+                <MenuItem value="INACTIVE">Inactive</MenuItem>
+              </TextField>
 
               {/* Error Alert */}
               {error && (
@@ -199,6 +228,36 @@ export default function EditUser() {
           </Box>
         </Paper>
       </Container>
+      <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
+        <DialogTitle>
+          {pendingActiveState ? "Activate User" : "Deactivate User"}
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2">
+            {pendingActiveState
+              ? "Are you sure you want to activate this user?"
+              : "Are you sure you want to deactivate this user? The user will no longer be able to log in."}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmOpen(false)}>
+            Cancel
+          </Button>
+          <Button
+            color={pendingActiveState ? "success" : "error"}
+            onClick={() => {
+              setFormData((prev) => ({
+                ...prev,
+                isActive: pendingActiveState ?? prev.isActive,
+              }));
+              setConfirmOpen(false);
+              setPendingActiveState(null);
+            }}
+          >
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
     </MainLayout>
   );
 }

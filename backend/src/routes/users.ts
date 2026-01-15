@@ -33,4 +33,26 @@ router.post("/", authMiddleware, isAdmin, async (req, res) => {
   }
 });
 
+// Editar usuario (solo admin)
+router.patch("/:id", authMiddleware, isAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { name, email, role, isActive } = req.body;
+
+  try {
+    const user = await prisma.user.update({
+      where: { id: Number(id) },
+      data: {
+        name,
+        email,
+        role,
+        isActive,
+      },
+    });
+
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ error: "Error al actualizar usuario" });
+  }
+});
+
 export default router;

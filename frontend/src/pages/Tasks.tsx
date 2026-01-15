@@ -26,7 +26,6 @@ import {
   Pending as PendingIcon,
   CheckCircle as CheckCircleIcon,
   Add as AddIcon,
-  MoreVert as MoreVertIcon,
   FilterList as FilterListIcon,
   FileDownload as FileDownloadIcon,
   Edit as EditIcon,
@@ -366,7 +365,7 @@ export default function Tasks() {
                 <TableRow sx={{ bgcolor: "grey.50" }}>
                   <TableCell>Task Name</TableCell>
                   <TableCell>Assigned To</TableCell>
-                  <TableCell>Requested By</TableCell> {/* 🔹 Nueva columna */}
+                  <TableCell>Requested By</TableCell>
                   <TableCell>Start Date</TableCell>
                   <TableCell>Status</TableCell>
                   <TableCell>Department</TableCell>
@@ -462,9 +461,6 @@ export default function Tasks() {
                               <EditIcon fontSize="small" />
                             </IconButton>
                           )}
-                          <IconButton size="small">
-                            <MoreVertIcon fontSize="small" />
-                          </IconButton>
                         </Stack>
                       </TableCell>
                     </TableRow>

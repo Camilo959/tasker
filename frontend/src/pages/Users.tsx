@@ -29,7 +29,6 @@ import {
   AdminPanelSettings as AdminIcon,
   Search as SearchIcon,
   Edit as EditIcon,
-  Delete as DeleteIcon,
   FilterList as FilterListIcon,
   FileDownload as FileDownloadIcon,
 } from "@mui/icons-material";
@@ -109,20 +108,6 @@ export default function Users() {
       console.error("Error fetching users:", error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleDeleteUser = async (id: number, name: string) => {
-    if (!window.confirm(`Are you sure you want to delete user "${name}"?`)) {
-      return;
-    }
-
-    try {
-      await apiService.deleteUser(id);
-      setUsers(users.filter((u) => u.id !== id));
-    } catch (error) {
-      console.error("Error deleting user:", error);
-      alert("Failed to delete user");
     }
   };
 
@@ -495,13 +480,6 @@ export default function Users() {
                             onClick={() => navigate(`/users/edit/${user.id}`)}
                           >
                             <EditIcon fontSize="small" />
-                          </IconButton>
-                          <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => handleDeleteUser(user.id, user.name)}
-                          >
-                            <DeleteIcon fontSize="small" />
                           </IconButton>
                         </Stack>
                       </TableCell>
