@@ -20,8 +20,8 @@ import {
   PersonAdd as PersonAddIcon,
   ArrowBack as ArrowBackIcon,
 } from "@mui/icons-material";
-import { MainLayout } from "../components/layout/MainLayout";
-import { apiService } from "../services/api.service";
+import { MainLayout } from "../../components/layout/MainLayout";
+import { apiService } from "../../services/api.service";
 
 export default function CreateUser() {
   const navigate = useNavigate();

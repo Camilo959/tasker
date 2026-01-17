@@ -33,8 +33,8 @@ import {
   FileDownload as FileDownloadIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import { MainLayout } from "../components/layout/MainLayout";
-import { apiService } from "../services/api.service";
+import { MainLayout } from "../../components/layout/MainLayout";
+import { apiService } from "../../services/api.service";
 
 interface User {
   id: number;

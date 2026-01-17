@@ -21,9 +21,9 @@ import {
   Save as SaveIcon,
   ArrowBack as ArrowBackIcon,
 } from "@mui/icons-material";
-import { MainLayout } from "../components/layout/MainLayout";
-import { apiService } from "../services/api.service";
-import type { User } from "../types/user";
+import { MainLayout } from "../../components/layout/MainLayout";
+import { apiService } from "../../services/api.service";
+import type { User } from "../../types/user";
 
 export default function EditUser() {
   const { id } = useParams();

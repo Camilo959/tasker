@@ -12,9 +12,7 @@ import {
   ListItemIcon,
   ListItemText,
   Typography,
-  IconButton,
   InputBase,
-  Badge,
   Avatar,
   Menu,
   MenuItem,
@@ -29,7 +27,6 @@ import {
   BarChart as ReportsIcon,
   Settings as SettingsIcon,
   Search as SearchIcon,
-  Notifications as NotificationsIcon,
   TaskAlt as TaskAltIcon,
 } from "@mui/icons-material";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -226,11 +223,6 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
             {/* Right side */}
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
               {/* Notifications */}
-              <IconButton size="large">
-                <Badge badgeContent={3} color="error">
-                  <NotificationsIcon />
-                </Badge>
-              </IconButton>
 
               <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
 

@@ -1,6 +1,6 @@
-// pages/EditDepartment.tsx - Material UI Version
-import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+// pages/CreateDepartment.tsx - Material UI Version
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Container,
   Paper,
@@ -10,49 +10,19 @@ import {
   Box,
   Alert,
   Stack,
-  CircularProgress,
 } from "@mui/material";
 import {
-  Save as SaveIcon,
+  Add as AddIcon,
   ArrowBack as ArrowBackIcon,
 } from "@mui/icons-material";
-import { MainLayout } from "../components/layout/MainLayout";
-import { apiService } from "../services/api.service";
-import type { Department } from "../types/department";
+import { MainLayout } from "../../components/layout/MainLayout";
+import { apiService } from "../../services/api.service";
 
-export default function EditDepartment() {
-  const { id } = useParams();
+export default function CreateDepartment() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
-  const [initialLoading, setInitialLoading] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    fetchDepartment();
-  }, [id]);
-
-  const fetchDepartment = async () => {
-    try {
-      setInitialLoading(true);
-      const departments: Department[] = await apiService.getUsers();
-      const department = departments.find((d) => d.id === Number(id));
-
-      if (department) {
-        setName(department.name);
-      } else {
-        setError("Department not found");
-      }
-    } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("Failed to load department");
-      }
-    } finally {
-      setInitialLoading(false);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,37 +35,18 @@ export default function EditDepartment() {
 
     setLoading(true);
     try {
-      await apiService.updateDepartment(Number(id), { name: name.trim() });
+      await apiService.createDepartment({ name: name.trim() });
       navigate("/departments");
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError("Failed to update department");
+        setError("Failed to create department");
       }
     } finally {
       setLoading(false);
     }
   };
-
-  if (initialLoading) {
-    return (
-      <MainLayout>
-        <Container maxWidth="md">
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              minHeight: "60vh",
-            }}
-          >
-            <CircularProgress />
-          </Box>
-        </Container>
-      </MainLayout>
-    );
-  }
 
   return (
     <MainLayout>
@@ -109,10 +60,10 @@ export default function EditDepartment() {
             Back to Departments
           </Button>
           <Typography variant="h4" fontWeight="bold" gutterBottom>
-            Edit Department
+            Create New Department
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Update department information
+            Add a new department to your organization
           </Typography>
         </Box>
 
@@ -127,6 +78,7 @@ export default function EditDepartment() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
+                placeholder="e.g., Human Resources, Sales, IT..."
                 autoFocus
                 helperText="Enter a descriptive name for this department"
               />
@@ -150,35 +102,37 @@ export default function EditDepartment() {
                 <Button
                   type="submit"
                   variant="contained"
-                  startIcon={<SaveIcon />}
+                  startIcon={<AddIcon />}
                   disabled={loading}
                   sx={{
                     minWidth: 150,
                   }}
                 >
-                  {loading ? "Saving..." : "Save Changes"}
+                  {loading ? "Creating..." : "Create Department"}
                 </Button>
               </Stack>
             </Stack>
           </Box>
         </Paper>
 
-        {/* Warning Box */}
+        {/* Info Box */}
         <Paper
           sx={{
             p: 3,
             mt: 3,
-            bgcolor: "warning.lighter",
+            bgcolor: "info.lighter",
             border: 1,
-            borderColor: "warning.light",
+            borderColor: "info.light",
           }}
         >
-          <Typography variant="body2" color="warning.dark" fontWeight={600} gutterBottom>
-            ⚠️ Important:
+          <Typography variant="body2" color="info.dark" fontWeight={600} gutterBottom>
+            💡 Tips for Department Names:
           </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Changing the department name will affect all associated tasks and users. 
-            Make sure to inform relevant team members about this change.
+          <Typography variant="body2" color="text.secondary" component="ul" sx={{ pl: 2, mt: 1 }}>
+            <li>Use clear, descriptive names</li>
+            <li>Keep it concise (2-3 words max)</li>
+            <li>Use standard business terms</li>
+            <li>Avoid abbreviations unless widely known</li>
           </Typography>
         </Paper>
       </Container>

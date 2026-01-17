@@ -31,10 +31,10 @@ import {
   Edit as EditIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../auth/useAuth";
-import { MainLayout } from "../components/layout/MainLayout";
-import { apiService } from "../services/api.service";
-import type { Task } from "../types/task";
+import { useAuth } from "../../auth/useAuth";
+import { MainLayout } from "../../components/layout/MainLayout";
+import { apiService } from "../../services/api.service";
+import type { Task } from "../../types/task";
 
 interface TaskStats {
   totalTasks: number;

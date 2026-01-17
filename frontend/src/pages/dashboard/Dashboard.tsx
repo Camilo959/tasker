@@ -17,9 +17,9 @@ import {
   ArrowForward as ArrowForwardIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../auth/useAuth";
-import { MainLayout } from "../components/layout/MainLayout";
-import { apiService } from "../services/api.service";
+import { useAuth } from "../../auth/useAuth";
+import { MainLayout } from "../../components/layout/MainLayout";
+import { apiService } from "../../services/api.service";
 
 interface DashboardStats {
   totalTasks: number;

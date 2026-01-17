@@ -19,9 +19,9 @@ import {
   Save as SaveIcon,
   ArrowBack as ArrowBackIcon,
 } from "@mui/icons-material";
-import { MainLayout } from "../components/layout/MainLayout";
-import { apiService } from "../services/api.service";
-import type { Task } from "../types/task";
+import { MainLayout } from "../../components/layout/MainLayout";
+import { apiService } from "../../services/api.service";
+import type { Task } from "../../types/task";
 
 export default function EditTask() {
   const { id } = useParams();

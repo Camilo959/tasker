@@ -5,17 +5,17 @@ import AdminRoute from "./auth/AdminRoute";
 import { CircularProgress, Box } from "@mui/material";
 
 // Lazy pages
-const Login = lazy(() => import("./pages/Login"));
-const Dashboard = lazy(() => import("./pages/Dashboard"));
-const Tasks = lazy(() => import("./pages/Tasks"));
-const CreateTask = lazy(() => import("./pages/CreateTask"));
-const EditTask = lazy(() => import("./pages/EditTask"));
-const Departments = lazy(() => import("./pages/Departments"));
-const CreateDepartment = lazy(() => import("./pages/CreateDepartment"));
-const EditDepartment = lazy(() => import("./pages/EditDepartment"));
-const Users = lazy(() => import("./pages/Users"));
-const CreateUser = lazy(() => import("./pages/CreateUser"));
-const EditUser = lazy(() => import("./pages/EditUser"));
+const Login = lazy(() => import("./pages/auth/Login"));
+const Dashboard = lazy(() => import("./pages/dashboard/Dashboard"));
+const Tasks = lazy(() => import("./pages/tasks/Tasks"));
+const CreateTask = lazy(() => import("./pages/tasks/CreateTask"));
+const EditTask = lazy(() => import("./pages/tasks/EditTask"));
+const Departments = lazy(() => import("./pages/departments/Departments"));
+const CreateDepartment = lazy(() => import("./pages/departments/CreateDepartment"));
+const EditDepartment = lazy(() => import("./pages/departments/EditDepartment"));
+const Users = lazy(() => import("./pages/users/Users"));
+const CreateUser = lazy(() => import("./pages/users/CreateUser"));
+const EditUser = lazy(() => import("./pages/users/EditUser"));
 
 const Loader = () => (
   <Box
