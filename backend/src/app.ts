@@ -4,6 +4,7 @@ import authRoutes from "./routes/auth.routes";
 import usersRoutes from "./routes/users.routes";
 import departmentsRoutes from "./routes/departments.routes";
 import tasksRoutes from "./routes/tasks.routes";
+import reportsRoutes from "./routes/reports.routes";
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use("/auth", authRoutes);
 app.use("/users", usersRoutes);
 app.use("/departments", departmentsRoutes);
 app.use("/tasks", tasksRoutes);
+app.use("/reports", reportsRoutes);
 
 // Ruta de salud
 app.get("/health", (req, res) => {

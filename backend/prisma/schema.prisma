@@ -42,46 +42,56 @@ model Department {
 }
 
 model Task {
-  id            Int        @id @default(autoincrement())
+  id            Int         @id @default(autoincrement())
   title         String
   description   String?
 
   // 🔹 Quién solicitó la tarea
   requestedById Int
-  requestedBy   User       @relation("RequestedTasks", fields: [requestedById],  references: [id])
+  requestedBy   User        @relation("RequestedTasks", fields: [requestedById], references: [id], onDelete: Cascade)
 
   // 🔹 Usuario responsable
   assignedToId  Int
-  assignedTo    User       @relation("AssignedTasks",fields: [assignedToId],references: [id])
+  assignedTo    User        @relation("AssignedTasks", fields: [assignedToId], references: [id], onDelete: Cascade)
 
   departmentId  Int?
-  department    Department? @relation(fields: [departmentId], references: [id])
+  department    Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
 
-  status        TaskStatus @default(PENDING)
+  status        TaskStatus  @default(PENDING)
 
-  // 🔹 Registros de tiempo
+  // ✅ NUEVOS: Resumen de tiempo en la tarea
+  startDate     DateTime?   // Cuándo se empezó
+  hoursSpent    Float       @default(0) // Total de horas
+  workDescription String?   // Descripción del trabajo realizado
+
+  // 🔹 Registros detallados de tiempo
   timeEntries   TimeEntry[]
 
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
 }
 
 model TimeEntry {
-  id          Int      @id @default(autoincrement())
+  id              Int      @id @default(autoincrement())
 
-  taskId     Int
-  task       Task     @relation(fields: [taskId], references: [id])
+  // 🔹 Referencia a la tarea
+  taskId          Int
+  task            Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
-  userId     Int
-  user       User     @relation(fields: [userId], references: [id])
+  // 🔹 Quién registró el tiempo
+  userId          Int
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  startTime  DateTime
-  hoursSpent Float
-  workDescription String
+  // 🔹 Detalles del registro de tiempo
+  date            DateTime // Fecha en que se trabajó
+  hoursWorked     Float    // Horas trabajadas en este registro
+  description     String?  // Descripción de qué se hizo (ej: "Implementé login", "Debuggeo de errores")
 
-  createdAt DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
 }
-
 enum TaskStatus {
   PENDING
   IN_PROGRESS

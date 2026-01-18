@@ -13,6 +13,9 @@ interface UpdateTaskDTO {
   title?: string;
   description?: string;
   status?: TaskStatus;
+  startDate?: Date;
+  hoursSpent?: number;
+  workDescription?: string;
 }
 
 interface TaskFilters {
@@ -65,6 +68,7 @@ export class TasksService {
           select: { id: true, name: true, email: true },
         },
         department: true,
+        timeEntries: true,
       },
     });
   }
@@ -83,14 +87,19 @@ export class TasksService {
       throw new Error("Tarea no encontrada");
     }
 
-    // Verificar permisos: Solo ADMIN o el usuario asignado puede editar
-    if (userRole !== "ADMIN" && task.assignedToId !== userId) {
-      throw new Error("No tienes permiso para editar esta tarea");
-    }
+    // ✅ Verificar permisos de edición por campo
+    this.validateEditPermissions(userRole, userId, data, task.assignedToId);
 
     return await prisma.task.update({
       where: { id: taskId },
-      data,
+      data: {
+        title: data.title,
+        description: data.description,
+        status: data.status,
+        startDate: data.startDate,
+        workDescription: data.workDescription,
+        // ⚠️ hoursSpent se calcula automáticamente desde TimeEntry
+      },
       include: {
         assignedTo: {
           select: { id: true, name: true, email: true },
@@ -99,6 +108,7 @@ export class TasksService {
           select: { id: true, name: true, email: true },
         },
         department: true,
+        timeEntries: true,
       },
     });
   }
@@ -126,7 +136,7 @@ export class TasksService {
       where.assignedToId = filters.userId;
     }
 
-    return await prisma.task.findMany({
+    const tasks = await prisma.task.findMany({
       where,
       include: {
         assignedTo: {
@@ -136,11 +146,21 @@ export class TasksService {
           select: { id: true, name: true, email: true, role: true },
         },
         department: true,
+        timeEntries: true,
       },
       orderBy: {
         createdAt: "desc",
       },
     });
+
+    // ✅ Calcular hoursSpent desde timeEntries
+    return tasks.map((task) => ({
+      ...task,
+      hoursSpent: task.timeEntries.reduce(
+        (sum, entry) => sum + entry.hoursWorked,
+        0
+      ),
+    }));
   }
 
   async getTaskById(taskId: number, userId: number, userRole: string) {
@@ -154,6 +174,7 @@ export class TasksService {
           select: { id: true, name: true, email: true, role: true },
         },
         department: true,
+        timeEntries: true,
       },
     });
 
@@ -166,7 +187,14 @@ export class TasksService {
       throw new Error("No tienes permiso para ver esta tarea");
     }
 
-    return task;
+    // ✅ Calcular hoursSpent desde timeEntries
+    return {
+      ...task,
+      hoursSpent: task.timeEntries.reduce(
+        (sum, entry) => sum + entry.hoursWorked,
+        0
+      ),
+    };
   }
 
   async deleteTask(taskId: number, userId: number, userRole: string) {
@@ -188,6 +216,36 @@ export class TasksService {
     });
 
     return { message: "Tarea eliminada" };
+  }
+
+  // ✅ NUEVO: Validar permisos por campo
+  private validateEditPermissions(
+    userRole: string,
+    userId: number,
+    data: UpdateTaskDTO,
+    taskAssignedToId: number
+  ): void {
+    // ADMIN puede editar todo
+    if (userRole === "ADMIN") {
+      return;
+    }
+
+    // EMPLOYEE solo de sus tareas asignadas
+    if (userRole === "EMPLOYEE" && userId !== taskAssignedToId) {
+      throw new Error("No tienes permiso para editar esta tarea");
+    }
+
+    // Campos que EMPLOYEE NO puede editar
+    const forbiddenFields = ["title", "description"];
+    const fieldsToEdit = Object.keys(data).filter(
+      (key) => (data as any)[key] !== undefined
+    );
+
+    for (const field of fieldsToEdit) {
+      if (forbiddenFields.includes(field)) {
+        throw new Error(`No puedes editar el campo '${field}' como EMPLOYEE`);
+      }
+    }
   }
 }
 
