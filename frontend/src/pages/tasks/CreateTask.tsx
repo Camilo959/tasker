@@ -1,4 +1,3 @@
-// pages/CreateTask.tsx - Material UI Version
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -24,6 +23,7 @@ interface User {
   id: number;
   name: string;
   email: string;
+  role: string;
 }
 
 interface Department {
@@ -54,11 +54,12 @@ export default function CreateTask() {
         apiService.getUsers(),
         apiService.getDepartments(),
       ]);
+      
       setUsers(usersData);
       setDepartments(deptsData);
     } catch (err) {
       console.error("Error loading data:", err);
-      setError("Failed to load users and departments");
+      setError("Error al cargar usuarios y departamentos");
     }
   };
 
@@ -75,12 +76,12 @@ export default function CreateTask() {
     setError("");
 
     if (!formData.title.trim()) {
-      setError("Title is required");
+      setError("El título es requerido");
       return;
     }
 
     if (!formData.assignedToId) {
-      setError("Please assign the task to a user");
+      setError("Por favor asigna la tarea a un usuario");
       return;
     }
 
@@ -90,14 +91,17 @@ export default function CreateTask() {
         title: formData.title.trim(),
         description: formData.description.trim() || null,
         assignedToId: Number(formData.assignedToId),
-        departmentId: formData.departmentId ? Number(formData.departmentId) : null,
+        departmentId: formData.departmentId
+          ? Number(formData.departmentId)
+          : null,
       });
+      alert("✅ Tarea creada correctamente");
       navigate("/tasks");
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError("Failed to create task");
+        setError("Error al crear la tarea");
       }
     } finally {
       setLoading(false);
@@ -239,10 +243,20 @@ export default function CreateTask() {
             borderColor: "info.light",
           }}
         >
-          <Typography variant="body2" color="info.dark" fontWeight={600} gutterBottom>
+          <Typography
+            variant="body2"
+            color="info.dark"
+            fontWeight={600}
+            gutterBottom
+          >
             💡 Tips for Creating Tasks:
           </Typography>
-          <Typography variant="body2" color="text.secondary" component="ul" sx={{ pl: 2, mt: 1 }}>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            component="ul"
+            sx={{ pl: 2, mt: 1 }}
+          >
             <li>Use clear, action-oriented titles</li>
             <li>Provide detailed descriptions with requirements</li>
             <li>Assign to the most appropriate team member</li>

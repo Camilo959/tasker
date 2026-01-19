@@ -4,7 +4,7 @@ import { AuthContext } from "./context";
 import { setGlobalLogout } from "./authBridge";
 
 interface User {
-  userId: number;
+  id: number;
   role: string;
   name?: string;
 }

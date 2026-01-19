@@ -5,6 +5,7 @@ import {
   Container,
   Card,
   CardContent,
+  Dialog,
   Typography,
   Button,
   Avatar,
@@ -21,7 +22,6 @@ import {
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import {
-  TrendingUp as TrendingUpIcon,
   ListAlt as ListAltIcon,
   Pending as PendingIcon,
   CheckCircle as CheckCircleIcon,
@@ -29,6 +29,8 @@ import {
   FilterList as FilterListIcon,
   FileDownload as FileDownloadIcon,
   Edit as EditIcon,
+  Timer as TimerIcon,
+  Delete as DeleteIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/useAuth";
@@ -41,6 +43,7 @@ interface TaskStats {
   inProgress: number;
   completed: number;
   pending: number;
+  totalHours: number;
 }
 
 export default function Tasks() {
@@ -51,9 +54,13 @@ export default function Tasks() {
     inProgress: 0,
     completed: 0,
     pending: 0,
+    totalHours: 0,
   });
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
+
 
   useEffect(() => {
     fetchTasks();
@@ -70,12 +77,14 @@ export default function Tasks() {
       const inProgress = tasksData.filter((t: Task) => t.status === "IN_PROGRESS").length;
       const completed = tasksData.filter((t: Task) => t.status === "DONE").length;
       const pending = tasksData.filter((t: Task) => t.status === "PENDING").length;
-      
+      const totalHours = tasksData.reduce((sum, t) => sum + (t.hoursSpent || 0),0);
+
       setStats({
         totalTasks,
         inProgress,
         completed,
         pending,
+        totalHours,
       });
       
       setTasks(tasksData);
@@ -83,6 +92,20 @@ export default function Tasks() {
       console.error("Error fetching tasks:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+
+  const handleDeleteTask = async () => {
+    if (!selectedTaskId) return;
+
+    try {
+      await apiService.deleteTask(selectedTaskId);
+      setDeleteDialogOpen(false);
+      setSelectedTaskId(null);
+      fetchTasks();
+    } catch (error) {
+      console.error("Error deleting task:", error);
     }
   };
 
@@ -122,7 +145,14 @@ export default function Tasks() {
   };
 
   const canEditTask = (task: Task) => {
-    return user?.role === "ADMIN" || task.assignedToId === user?.userId;
+    return user?.role === "ADMIN" || task.assignedToId === user?.id;
+  };
+
+  // WARNING
+  const canDeleteTask = (task: Task) => {
+    console.log(task.assignedToId);
+
+    return user?.role === "ADMIN";
   };
 
   return (
@@ -145,7 +175,8 @@ export default function Tasks() {
               Manage and track all your tasks and their progress.
             </Typography>
           </Box>
-          <Button
+          {user?.role == "ADMIN" && (
+            <Button
             variant="contained"
             startIcon={<AddIcon />}
             onClick={() => navigate("/tasks/create")}
@@ -155,12 +186,13 @@ export default function Tasks() {
           >
             Create Task
           </Button>
+          )}
         </Box>
 
         {/* Statistics Cards */}
         <Grid container spacing={3} sx={{ mb: 4 }}>
           {/* Total Tasks */}
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
             <Card>
               <CardContent sx={{ display: "flex", justifyContent: "space-between" }}>
                 <Box>
@@ -170,20 +202,6 @@ export default function Tasks() {
                   <Typography variant="h3" fontWeight="bold">
                     {loading ? "..." : stats.totalTasks.toLocaleString()}
                   </Typography>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 0.5,
-                      mt: 1,
-                      color: "success.main",
-                    }}
-                  >
-                    <TrendingUpIcon sx={{ fontSize: 16 }} />
-                    <Typography variant="body2" fontWeight={600}>
-                      +12% this month
-                    </Typography>
-                  </Box>
                 </Box>
                 <Avatar
                   sx={{
@@ -199,7 +217,7 @@ export default function Tasks() {
           </Grid>
 
           {/* In Progress */}
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
             <Card>
               <CardContent sx={{ display: "flex", justifyContent: "space-between" }}>
                 <Box>
@@ -209,20 +227,6 @@ export default function Tasks() {
                   <Typography variant="h3" fontWeight="bold">
                     {loading ? "..." : stats.inProgress.toLocaleString()}
                   </Typography>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 0.5,
-                      mt: 1,
-                      color: "success.main",
-                    }}
-                  >
-                    <TrendingUpIcon sx={{ fontSize: 16 }} />
-                    <Typography variant="body2" fontWeight={600}>
-                      +5% this week
-                    </Typography>
-                  </Box>
                 </Box>
                 <Avatar
                   sx={{
@@ -238,7 +242,7 @@ export default function Tasks() {
           </Grid>
 
           {/* Completed */}
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
             <Card>
               <CardContent sx={{ display: "flex", justifyContent: "space-between" }}>
                 <Box>
@@ -248,20 +252,6 @@ export default function Tasks() {
                   <Typography variant="h3" fontWeight="bold">
                     {loading ? "..." : stats.completed.toLocaleString()}
                   </Typography>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 0.5,
-                      mt: 1,
-                      color: "success.main",
-                    }}
-                  >
-                    <TrendingUpIcon sx={{ fontSize: 16 }} />
-                    <Typography variant="body2" fontWeight={600}>
-                      +18% increase
-                    </Typography>
-                  </Box>
                 </Box>
                 <Avatar
                   sx={{
@@ -277,7 +267,7 @@ export default function Tasks() {
           </Grid>
 
           {/* Pending */}
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
             <Card>
               <CardContent sx={{ display: "flex", justifyContent: "space-between" }}>
                 <Box>
@@ -287,20 +277,6 @@ export default function Tasks() {
                   <Typography variant="h3" fontWeight="bold">
                     {loading ? "..." : stats.pending.toLocaleString()}
                   </Typography>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 0.5,
-                      mt: 1,
-                      color: "warning.main",
-                    }}
-                  >
-                    <TrendingUpIcon sx={{ fontSize: 16 }} />
-                    <Typography variant="body2" fontWeight={600}>
-                      Needs attention
-                    </Typography>
-                  </Box>
                 </Box>
                 <Avatar
                   sx={{
@@ -310,6 +286,31 @@ export default function Tasks() {
                   }}
                 >
                   <PendingIcon sx={{ color: "warning.dark" }} />
+                </Avatar>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Total Hours ✅ NUEVO */}
+          <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+            <Card>
+              <CardContent sx={{ display: "flex", justifyContent: "space-between" }}>
+                <Box>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    Horas Totales
+                  </Typography>
+                  <Typography variant="h3" fontWeight="bold">
+                    {loading ? "..." : stats.totalHours}
+                  </Typography>
+                </Box>
+                <Avatar
+                  sx={{
+                    bgcolor: "secondary.light",
+                    width: 56,
+                    height: 56,
+                  }}
+                >
+                  <TimerIcon sx={{ color: "secondary.main" }} />
                 </Avatar>
               </CardContent>
             </Card>
@@ -451,6 +452,7 @@ export default function Tasks() {
                           {task.department?.name || "N/A"}
                         </Typography>
                       </TableCell>
+                      
                       <TableCell align="right">
                         <Stack direction="row" spacing={0.5} justifyContent="flex-end">
                           {canEditTask(task) && (
@@ -459,6 +461,19 @@ export default function Tasks() {
                               onClick={() => navigate(`/tasks/edit/${task.id}`)}
                             >
                               <EditIcon fontSize="small" />
+                            </IconButton>
+                          )}
+                          {canDeleteTask(task) && (
+                            <IconButton
+                              size="small"
+                              onClick={() => {
+                                setSelectedTaskId(task.id);
+                                setDeleteDialogOpen(true);
+                              }}
+                              title="Eliminar"
+                              sx={{ color: "error.main" }}
+                            >
+                              <DeleteIcon fontSize="small" />
                             </IconButton>
                           )}
                         </Stack>
@@ -495,6 +510,28 @@ export default function Tasks() {
             </Stack>
           </Box>
         </Paper>
+
+        {/* Delete Dialog */}
+        <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+          <Box sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              ¿Eliminar tarea?
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              Esta acción no se puede deshacer.
+            </Typography>
+            <Stack direction="row" spacing={2} justifyContent="flex-end">
+              <Button onClick={() => setDeleteDialogOpen(false)}>Cancelar</Button>
+              <Button
+                variant="contained"
+                color="error"
+                onClick={handleDeleteTask}
+              >
+                Eliminar
+              </Button>
+            </Stack>
+          </Box>
+        </Dialog>
       </Container>
     </MainLayout>
   );

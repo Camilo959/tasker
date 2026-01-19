@@ -1,11 +1,12 @@
 // pages/auth/Login.tsx - Material UI Version
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AxiosError } from "axios";
 import { Box, Container } from "@mui/material";
 import { LoginHeader, LoginForm, LoginFooter } from "../../components/auth";
-import api from "../../api/axios";
+import { apiService } from "../../services/api.service";
 import { useAuth } from "../../auth/useAuth";
+import type { User } from "../../types/user";
+
 
 export default function Login() {
   const navigate = useNavigate();
@@ -23,12 +24,21 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const res = await api.post("/auth/login", { email, password });
-      login(res.data.token, res.data.user);
+      const res = await apiService.login(email, password);
+
+      if (rememberMe) {
+        localStorage.setItem("token", res.token);
+      } else {
+        sessionStorage.setItem("token", res.token);
+      }
+
+      // Aquí puedes hacer un cast si es necesario
+      login(res.token, res.user as User);
       navigate("/dashboard");
+
     } catch (err: unknown) {
-      if (err instanceof AxiosError) {
-        setError(err.response?.data?.error || "Error al iniciar sesión");
+      if (err instanceof Error) {
+        setError(err.message);
       } else {
         setError("Error inesperado");
       }
@@ -36,6 +46,7 @@ export default function Login() {
       setLoading(false);
     }
   };
+
 
   return (
     <Box

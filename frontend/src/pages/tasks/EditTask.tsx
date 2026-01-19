@@ -1,4 +1,3 @@
-// pages/EditTask.tsx - Material UI Version
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -8,66 +7,117 @@ import {
   TextField,
   Button,
   Box,
+  Chip,
   Alert,
   MenuItem,
   Stack,
   CircularProgress,
-  Chip,
+  Dialog,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  IconButton,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import {
   Save as SaveIcon,
   ArrowBack as ArrowBackIcon,
+  Add as AddIcon,
+  Delete as DeleteIcon,
+  Edit as EditIcon,
+  Timer as TimerIcon,
 } from "@mui/icons-material";
 import { MainLayout } from "../../components/layout/MainLayout";
 import { apiService } from "../../services/api.service";
-import type { Task } from "../../types/task";
+import { useAuth } from "../../auth/useAuth";
+import type { Task, TimeEntry } from "../../types/task";
 
 export default function EditTask() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  
+  // Task form data
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     status: "PENDING",
+    workDescription: "",
   });
+
+  // Time entry data
+  const [timeEntryForm, setTimeEntryForm] = useState({
+    date: new Date().toISOString().split("T")[0],
+    hoursWorked: "",
+    description: "",
+  });
+
+  // State
   const [taskInfo, setTaskInfo] = useState<Task | null>(null);
+  const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([]);
   const [initialLoading, setInitialLoading] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  
+  // Dialogs
+  const [timeEntryDialogOpen, setTimeEntryDialogOpen] = useState(false);
+  const [editingTimeEntry, setEditingTimeEntry] = useState<TimeEntry | null>(null);
+  const [deleteTimeEntryId, setDeleteTimeEntryId] = useState<number | null>(null);
 
   useEffect(() => {
-    const fetchTask = async () => {
-      try {
-        setInitialLoading(true);
-        const tasks: Task[] = await apiService.getTasks();
-        const task = tasks.find((t) => t.id === Number(id));
-        if (task) {
-          setTaskInfo(task);
-          setFormData({
-            title: task.title,
-            description: task.description || "",
-            status: task.status,
-          });
-        } else {
-          setError("Task not found");
-        }
-      } catch (err) {
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError("Failed to load task");
-        }
-      } finally {
-        setInitialLoading(false);
-      }
-    };
     fetchTask();
   }, [id]);
+
+  const fetchTask = async () => {
+    try {
+      setInitialLoading(true);
+      const tasks = await apiService.getTasks();
+      const task = tasks.find((t) => t.id === Number(id));
+      
+      if (task) {
+        setTaskInfo(task);
+        setFormData({
+          title: task.title,
+          description: task.description || "",
+          status: task.status,
+          workDescription: task.workDescription || "",
+        });
+
+        // Cargar TimeEntries
+        if (user?.role === "ADMIN" || task.assignedTo.id === user?.id) {
+          const entries = await apiService.getTimeEntriesByTask(task.id);
+          setTimeEntries(entries);
+        }
+      } else {
+        setError("Tarea no encontrada");
+      }
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Error al cargar la tarea");
+      }
+    } finally {
+      setInitialLoading(false);
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleTimeEntryChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const { name, value } = e.target;
+    setTimeEntryForm((prev) => ({
       ...prev,
       [name]: value,
     }));
@@ -78,41 +128,140 @@ export default function EditTask() {
     setError("");
 
     if (!formData.title.trim()) {
-      setError("Title is required");
+      setError("El título es requerido");
       return;
+    }
+
+    // Determinar qué campos se permiten editar
+    type UpdateTaskData = Partial<{
+      title: string;
+      description: string;
+      status: string;
+      workDescription: string;
+    }>;
+
+    const updateData: UpdateTaskData = {};
+
+    if (user?.role === "ADMIN") {
+      // ADMIN puede editar todo
+      updateData.title = formData.title.trim();
+      updateData.description = formData.description.trim();
+      updateData.status = formData.status;
+      updateData.workDescription = formData.workDescription.trim();
+    } else {
+      // EMPLOYEE solo puede editar ciertos campos
+      updateData.status = formData.status;
+      updateData.workDescription = formData.workDescription.trim();
     }
 
     setLoading(true);
     try {
-      await apiService.updateTask(Number(id), {
-        title: formData.title.trim(),
-        description: formData.description.trim(),
-        status: formData.status,
-      });
-      navigate("/tasks");
+      await apiService.updateTask(Number(id), updateData);
+      // Recargar la tarea para ver cambios
+      await fetchTask();
+      alert("✅ Tarea actualizada correctamente");
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError("Failed to update task");
+        setError("Error al actualizar la tarea");
       }
     } finally {
       setLoading(false);
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "DONE":
-        return "success";
-      case "IN_PROGRESS":
-        return "info";
-      case "PENDING":
-        return "warning";
-      default:
-        return "default";
+  // ========== TIME ENTRIES ==========
+  const handleAddTimeEntry = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    if (!timeEntryForm.date || !timeEntryForm.hoursWorked) {
+      setError("Fecha y horas son requeridas");
+      return;
+    }
+
+    const hours = parseFloat(timeEntryForm.hoursWorked);
+    if (hours <= 0) {
+      setError("Las horas deben ser mayor a 0");
+      return;
+    }
+
+    try {
+      if (editingTimeEntry) {
+        // Editar TimeEntry existente
+        const updated = await apiService.updateTimeEntry(editingTimeEntry.id, {
+          date: timeEntryForm.date,
+          hoursWorked: hours,
+          description: timeEntryForm.description,
+        });
+        
+        setTimeEntries(
+          timeEntries.map((t) => (t.id === updated.id ? updated : t))
+        );
+        setEditingTimeEntry(null);
+      } else {
+        // Crear nuevo TimeEntry
+        const newEntry = await apiService.createTimeEntry({
+          taskId: Number(id),
+          date: timeEntryForm.date,
+          hoursWorked: hours,
+          description: timeEntryForm.description,
+        });
+        
+        setTimeEntries([...timeEntries, newEntry]);
+      }
+
+      // Reset form
+      setTimeEntryForm({
+        date: new Date().toISOString().split("T")[0],
+        hoursWorked: "",
+        description: "",
+      });
+      setTimeEntryDialogOpen(false);
+      
+      // Actualizar la tarea para reflejar las horas nuevas
+      await fetchTask();
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Error al registrar tiempo");
+      }
     }
   };
+
+  const handleEditTimeEntry = (entry: TimeEntry) => {
+    setEditingTimeEntry(entry);
+    setTimeEntryForm({
+      date: entry.date.split("T")[0],
+      hoursWorked: entry.hoursWorked.toString(),
+      description: entry.description || "",
+    });
+    setTimeEntryDialogOpen(true);
+  };
+
+  const handleDeleteTimeEntry = async () => {
+    if (!deleteTimeEntryId) return;
+
+    try {
+      await apiService.deleteTimeEntry(deleteTimeEntryId);
+      setTimeEntries(timeEntries.filter((t) => t.id !== deleteTimeEntryId));
+      setDeleteTimeEntryId(null);
+      
+      // Actualizar tarea para reflejar las horas nuevas
+      await fetchTask();
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      }
+    }
+  };
+
+  // Corregir estas comparaciones según tu estructura de datos
+  const isEmployee = user?.role === "EMPLOYEE";
+  const isTaskAssignedToUser = taskInfo && taskInfo.assignedTo.id === user?.id;
+  const canEditTimeEntries = user?.role === "ADMIN" || isTaskAssignedToUser;
 
   if (initialLoading) {
     return (
@@ -142,13 +291,13 @@ export default function EditTask() {
             onClick={() => navigate("/tasks")}
             sx={{ mb: 2 }}
           >
-            Back to Tasks
+            Volver a Tareas
           </Button>
           <Typography variant="h4" fontWeight="bold" gutterBottom>
-            Edit Task
+            Editar Tarea
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Update task details and status
+            Actualiza los detalles y el estado de la tarea
           </Typography>
         </Box>
 
@@ -166,7 +315,7 @@ export default function EditTask() {
             <Grid container spacing={2}>
               <Grid size={{ xs: 12, sm: 6 }}>
                 <Typography variant="caption" color="text.secondary">
-                  Assigned To
+                  Asignado a
                 </Typography>
                 <Typography variant="body2" fontWeight={600}>
                   {taskInfo.assignedTo.name}
@@ -177,15 +326,15 @@ export default function EditTask() {
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
                 <Typography variant="caption" color="text.secondary">
-                  Department
+                  Departamento
                 </Typography>
                 <Typography variant="body2" fontWeight={600}>
-                  {taskInfo.department?.name || "No department"}
+                  {taskInfo.department?.name || "N/A"}
                 </Typography>
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
                 <Typography variant="caption" color="text.secondary">
-                  Created
+                  Creada
                 </Typography>
                 <Typography variant="body2" fontWeight={600}>
                   {new Date(taskInfo.createdAt).toLocaleDateString()}
@@ -193,15 +342,13 @@ export default function EditTask() {
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
                 <Typography variant="caption" color="text.secondary">
-                  Current Status
+                  Horas Totales
                 </Typography>
-                <Box sx={{ mt: 0.5 }}>
-                  <Chip
-                    label={taskInfo.status.replace("_", " ")}
-                    color={getStatusColor(taskInfo.status)}
-                    size="small"
-                    sx={{ fontWeight: 600 }}
-                  />
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                  <TimerIcon sx={{ fontSize: 16 }} />
+                  <Typography variant="body2" fontWeight={600}>
+                    {taskInfo.hoursSpent || 0}h
+                  </Typography>
                 </Box>
               </Grid>
             </Grid>
@@ -209,41 +356,45 @@ export default function EditTask() {
         )}
 
         {/* Edit Form */}
-        <Paper sx={{ p: 4, borderRadius: 3 }}>
+        <Paper sx={{ p: 4, borderRadius: 3, mb: 3 }}>
           <Box component="form" onSubmit={handleSubmit} noValidate>
             <Stack spacing={3}>
-              {/* Title Field */}
-              <TextField
-                fullWidth
-                label="Task Title"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                required
-                autoFocus
-              />
+              {/* Title Field - ADMIN only */}
+              {!isEmployee && (
+                <TextField
+                  fullWidth
+                  label="Título de la Tarea"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleChange}
+                  required
+                  autoFocus
+                />
+              )}
 
-              {/* Description Field */}
-              <TextField
-                fullWidth
-                label="Description"
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                multiline
-                rows={4}
-                placeholder="Enter task details..."
-              />
+              {/* Description Field - ADMIN only */}
+              {!isEmployee && (
+                <TextField
+                  fullWidth
+                  label="Descripción"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  multiline
+                  rows={3}
+                  placeholder="Detalles de la tarea..."
+                />
+              )}
 
               {/* Status Field */}
               <TextField
                 fullWidth
                 select
-                label="Status"
+                label="Estado"
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
-                helperText="Update the current status of this task"
+                helperText="Actualiza el estado actual de la tarea"
               >
                 <MenuItem value="PENDING">
                   <Stack direction="row" spacing={1} alignItems="center">
@@ -265,6 +416,19 @@ export default function EditTask() {
                 </MenuItem>
               </TextField>
 
+              {/* Work Description Field */}
+              <TextField
+                fullWidth
+                label="Descripción del Trabajo Realizado"
+                name="workDescription"
+                value={formData.workDescription}
+                onChange={handleChange}
+                multiline
+                rows={4}
+                placeholder="Describe el trabajo completado en esta tarea..."
+                helperText="Documenta lo que se realizó en esta tarea"
+              />
+
               {/* Error Alert */}
               {error && (
                 <Alert severity="error" onClose={() => setError("")}>
@@ -279,7 +443,7 @@ export default function EditTask() {
                   onClick={() => navigate("/tasks")}
                   disabled={loading}
                 >
-                  Cancel
+                  Cancelar
                 </Button>
                 <Button
                   type="submit"
@@ -290,30 +454,203 @@ export default function EditTask() {
                     minWidth: 150,
                   }}
                 >
-                  {loading ? "Saving..." : "Save Changes"}
+                  {loading ? "Guardando..." : "Guardar Cambios"}
                 </Button>
               </Stack>
             </Stack>
           </Box>
         </Paper>
 
-        {/* Warning Box */}
-        <Paper
-          sx={{
-            p: 3,
-            mt: 3,
-            bgcolor: "warning.lighter",
-            border: 1,
-            borderColor: "warning.light",
-          }}
+        {/* TIME ENTRIES SECTION */}
+        {canEditTimeEntries && (
+          <Paper sx={{ p: 4, borderRadius: 3 }}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 3,
+              }}
+            >
+              <Typography variant="h6" fontWeight="bold">
+                ⏱️ Registros de Tiempo
+              </Typography>
+              <Button
+                size="small"
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={() => {
+                  setEditingTimeEntry(null);
+                  setTimeEntryForm({
+                    date: new Date().toISOString().split("T")[0],
+                    hoursWorked: "",
+                    description: "",
+                  });
+                  setTimeEntryDialogOpen(true);
+                }}
+              >
+                Agregar Registro
+              </Button>
+            </Box>
+
+            {/* Time Entries Table */}
+            <TableContainer>
+              <Table size="small">
+                <TableHead>
+                  <TableRow sx={{ bgcolor: "grey.50" }}>
+                    <TableCell>Fecha</TableCell>
+                    <TableCell align="center">Horas</TableCell>
+                    <TableCell>Descripción</TableCell>
+                    <TableCell align="right">Acciones</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {timeEntries.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={4} align="center" sx={{ py: 3 }}>
+                        <Typography variant="body2" color="text.secondary">
+                          No hay registros de tiempo
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    timeEntries.map((entry) => (
+                      <TableRow key={entry.id}>
+                        <TableCell>
+                          {new Date(entry.date).toLocaleDateString("es-ES")}
+                        </TableCell>
+                        <TableCell align="center" sx={{ fontWeight: 600 }}>
+                          {entry.hoursWorked}h
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2">
+                            {entry.description || "-"}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align="right">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleEditTimeEntry(entry)}
+                            title="Editar"
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            onClick={() => setDeleteTimeEntryId(entry.id)}
+                            title="Eliminar"
+                            sx={{ color: "error.main", ml: 1 }}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+
+            {/* Summary */}
+            <Box sx={{ mt: 3, pt: 2, borderTop: 1, borderColor: "divider" }}>
+              <Typography variant="body2" color="text.secondary">
+                <strong>Total de Horas Registradas:</strong>{" "}
+                {timeEntries.reduce((sum, t) => sum + t.hoursWorked, 0)}h
+              </Typography>
+            </Box>
+          </Paper>
+        )}
+
+        {/* Time Entry Dialog */}
+        <Dialog
+          open={timeEntryDialogOpen}
+          onClose={() => setTimeEntryDialogOpen(false)}
+          maxWidth="sm"
+          fullWidth
         >
-          <Typography variant="body2" color="warning.dark" fontWeight={600} gutterBottom>
-            📝 Note:
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            To change the assigned user or department, please create a new task or contact an administrator.
-          </Typography>
-        </Paper>
+          <Box sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              {editingTimeEntry
+                ? "Editar Registro de Tiempo"
+                : "Nuevo Registro de Tiempo"}
+            </Typography>
+
+            <Stack spacing={2} sx={{ mt: 2 }}>
+              <TextField
+                fullWidth
+                type="date"
+                label="Fecha"
+                name="date"
+                value={timeEntryForm.date}
+                onChange={handleTimeEntryChange}
+                InputLabelProps={{ shrink: true }}
+              />
+
+              <TextField
+                fullWidth
+                type="number"
+                inputProps={{ step: 0.5, min: 0 }}
+                label="Horas Trabajadas"
+                name="hoursWorked"
+                value={timeEntryForm.hoursWorked}
+                onChange={handleTimeEntryChange}
+                placeholder="ej: 3.5"
+              />
+
+              <TextField
+                fullWidth
+                label="Descripción"
+                name="description"
+                value={timeEntryForm.description}
+                onChange={handleTimeEntryChange}
+                multiline
+                rows={3}
+                placeholder="¿Qué hiciste?"
+              />
+
+              {error && <Alert severity="error">{error}</Alert>}
+
+              <Stack direction="row" spacing={2} justifyContent="flex-end">
+                <Button onClick={() => setTimeEntryDialogOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button
+                  variant="contained"
+                  onClick={handleAddTimeEntry}
+                >
+                  {editingTimeEntry ? "Actualizar" : "Agregar"}
+                </Button>
+              </Stack>
+            </Stack>
+          </Box>
+        </Dialog>
+
+        {/* Delete Time Entry Dialog */}
+        <Dialog
+          open={deleteTimeEntryId !== null}
+          onClose={() => setDeleteTimeEntryId(null)}
+        >
+          <Box sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              ¿Eliminar registro de tiempo?
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              Esta acción no se puede deshacer.
+            </Typography>
+            <Stack direction="row" spacing={2} justifyContent="flex-end">
+              <Button onClick={() => setDeleteTimeEntryId(null)}>
+                Cancelar
+              </Button>
+              <Button
+                variant="contained"
+                color="error"
+                onClick={handleDeleteTimeEntry}
+              >
+                Eliminar
+              </Button>
+            </Stack>
+          </Box>
+        </Dialog>
       </Container>
     </MainLayout>
   );
