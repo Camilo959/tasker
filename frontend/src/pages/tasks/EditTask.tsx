@@ -29,6 +29,7 @@ import {
   Delete as DeleteIcon,
   Edit as EditIcon,
   Timer as TimerIcon,
+  CalendarToday as CalendarIcon,
 } from "@mui/icons-material";
 import { MainLayout } from "../../components/layout/MainLayout";
 import { apiService } from "../../services/api.service";
@@ -39,7 +40,7 @@ export default function EditTask() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  
+
   // Task form data
   const [formData, setFormData] = useState({
     title: "",
@@ -61,7 +62,7 @@ export default function EditTask() {
   const [initialLoading, setInitialLoading] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  
+
   // Dialogs
   const [timeEntryDialogOpen, setTimeEntryDialogOpen] = useState(false);
   const [editingTimeEntry, setEditingTimeEntry] = useState<TimeEntry | null>(null);
@@ -76,7 +77,7 @@ export default function EditTask() {
       setInitialLoading(true);
       const tasks = await apiService.getTasks();
       const task = tasks.find((t) => t.id === Number(id));
-      
+
       if (task) {
         setTaskInfo(task);
         setFormData({
@@ -86,19 +87,23 @@ export default function EditTask() {
           workDescription: task.workDescription || "",
         });
 
-        // Cargar TimeEntries
+        // === Aquí es donde verificas los time entries ===
+      console.log("User role:", user?.role);
+      console.log("Task assignedToId:", task.assignedTo.id);
+      console.log("Current userId:", user?.id);
+
+        // Load TimeEntries
         if (user?.role === "ADMIN" || task.assignedTo.id === user?.id) {
+          console.log("Fetching time entries for task:", task.id); // 🧪 Debug
           const entries = await apiService.getTimeEntriesByTask(task.id);
           setTimeEntries(entries);
         }
-      } else {
-        setError("Tarea no encontrada");
       }
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError("Error al cargar la tarea");
+        setError("Error loading task");
       }
     } finally {
       setInitialLoading(false);
@@ -128,28 +133,28 @@ export default function EditTask() {
     setError("");
 
     if (!formData.title.trim()) {
-      setError("El título es requerido");
+      setError("Title is required");
       return;
     }
 
-    // Determinar qué campos se permiten editar
     type UpdateTaskData = Partial<{
       title: string;
       description: string;
       status: string;
+      startDate: string;
       workDescription: string;
     }>;
 
     const updateData: UpdateTaskData = {};
 
     if (user?.role === "ADMIN") {
-      // ADMIN puede editar todo
+      // ADMIN can edit everything
       updateData.title = formData.title.trim();
       updateData.description = formData.description.trim();
       updateData.status = formData.status;
       updateData.workDescription = formData.workDescription.trim();
     } else {
-      // EMPLOYEE solo puede editar ciertos campos
+      // EMPLOYEE can only edit certain fields
       updateData.status = formData.status;
       updateData.workDescription = formData.workDescription.trim();
     }
@@ -157,14 +162,14 @@ export default function EditTask() {
     setLoading(true);
     try {
       await apiService.updateTask(Number(id), updateData);
-      // Recargar la tarea para ver cambios
+      // Reload task to see changes
       await fetchTask();
-      alert("✅ Tarea actualizada correctamente");
+      alert("✅ Task updated successfully");
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError("Error al actualizar la tarea");
+        setError("Error updating task");
       }
     } finally {
       setLoading(false);
@@ -177,38 +182,38 @@ export default function EditTask() {
     setError("");
 
     if (!timeEntryForm.date || !timeEntryForm.hoursWorked) {
-      setError("Fecha y horas son requeridas");
+      setError("Date and hours are required");
       return;
     }
 
     const hours = parseFloat(timeEntryForm.hoursWorked);
     if (hours <= 0) {
-      setError("Las horas deben ser mayor a 0");
+      setError("Hours must be greater than 0");
       return;
     }
 
     try {
       if (editingTimeEntry) {
-        // Editar TimeEntry existente
+        // Edit existing TimeEntry
         const updated = await apiService.updateTimeEntry(editingTimeEntry.id, {
           date: timeEntryForm.date,
           hoursWorked: hours,
           description: timeEntryForm.description,
         });
-        
+
         setTimeEntries(
           timeEntries.map((t) => (t.id === updated.id ? updated : t))
         );
         setEditingTimeEntry(null);
       } else {
-        // Crear nuevo TimeEntry
+        // Create new TimeEntry
         const newEntry = await apiService.createTimeEntry({
           taskId: Number(id),
           date: timeEntryForm.date,
           hoursWorked: hours,
           description: timeEntryForm.description,
         });
-        
+
         setTimeEntries([...timeEntries, newEntry]);
       }
 
@@ -219,14 +224,14 @@ export default function EditTask() {
         description: "",
       });
       setTimeEntryDialogOpen(false);
-      
-      // Actualizar la tarea para reflejar las horas nuevas
+
+      // Update task to reflect new hours
       await fetchTask();
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError("Error al registrar tiempo");
+        setError("Error recording time");
       }
     }
   };
@@ -248,8 +253,8 @@ export default function EditTask() {
       await apiService.deleteTimeEntry(deleteTimeEntryId);
       setTimeEntries(timeEntries.filter((t) => t.id !== deleteTimeEntryId));
       setDeleteTimeEntryId(null);
-      
-      // Actualizar tarea para reflejar las horas nuevas
+
+      // Update task to reflect new hours
       await fetchTask();
     } catch (err) {
       if (err instanceof Error) {
@@ -258,9 +263,11 @@ export default function EditTask() {
     }
   };
 
-  // Corregir estas comparaciones según tu estructura de datos
   const isEmployee = user?.role === "EMPLOYEE";
   const isTaskAssignedToUser = taskInfo && taskInfo.assignedTo.id === user?.id;
+
+  // ✅ El usuario asignado DEBE poder ver y editar time entries
+  // ✅ ADMIN puede ver/editar time entries de cualquier tarea
   const canEditTimeEntries = user?.role === "ADMIN" || isTaskAssignedToUser;
 
   if (initialLoading) {
@@ -291,13 +298,13 @@ export default function EditTask() {
             onClick={() => navigate("/tasks")}
             sx={{ mb: 2 }}
           >
-            Volver a Tareas
+            Back to Tasks
           </Button>
           <Typography variant="h4" fontWeight="bold" gutterBottom>
-            Editar Tarea
+            Edit Task
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Actualiza los detalles y el estado de la tarea
+            Update task details and track progress
           </Typography>
         </Box>
 
@@ -315,7 +322,7 @@ export default function EditTask() {
             <Grid container spacing={2}>
               <Grid size={{ xs: 12, sm: 6 }}>
                 <Typography variant="caption" color="text.secondary">
-                  Asignado a
+                  Assigned To
                 </Typography>
                 <Typography variant="body2" fontWeight={600}>
                   {taskInfo.assignedTo.name}
@@ -326,7 +333,7 @@ export default function EditTask() {
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
                 <Typography variant="caption" color="text.secondary">
-                  Departamento
+                  Department
                 </Typography>
                 <Typography variant="body2" fontWeight={600}>
                   {taskInfo.department?.name || "N/A"}
@@ -334,7 +341,7 @@ export default function EditTask() {
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
                 <Typography variant="caption" color="text.secondary">
-                  Creada
+                  Created On
                 </Typography>
                 <Typography variant="body2" fontWeight={600}>
                   {new Date(taskInfo.createdAt).toLocaleDateString()}
@@ -342,7 +349,27 @@ export default function EditTask() {
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
                 <Typography variant="caption" color="text.secondary">
-                  Horas Totales
+                  Started On
+                </Typography>
+                {taskInfo.startDate ? (
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                    <CalendarIcon sx={{ fontSize: 16, color: "success.main" }} />
+                    <Typography variant="body2" fontWeight={600}>
+                      {new Date(taskInfo.startDate).toLocaleDateString()}
+                    </Typography>
+                  </Box>
+                ) : (
+                  <Chip
+                    label="Not started yet"
+                    size="small"
+                    color="default"
+                    sx={{ mt: 0.5 }}
+                  />
+                )}
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <Typography variant="caption" color="text.secondary">
+                  Total Hours
                 </Typography>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                   <TimerIcon sx={{ fontSize: 16 }} />
@@ -359,42 +386,58 @@ export default function EditTask() {
         <Paper sx={{ p: 4, borderRadius: 3, mb: 3 }}>
           <Box component="form" onSubmit={handleSubmit} noValidate>
             <Stack spacing={3}>
-              {/* Title Field - ADMIN only */}
-              {!isEmployee && (
-                <TextField
-                  fullWidth
-                  label="Título de la Tarea"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleChange}
-                  required
-                  autoFocus
-                />
-              )}
+              {/* Title Field - Read-only for EMPLOYEE */}
+              <TextField
+                fullWidth
+                label="Task Title"
+                name="title"
+                value={formData.title}
+                onChange={handleChange}
+                disabled={isEmployee}
+                required={!isEmployee}
+                autoFocus={!isEmployee}
+                helperText={isEmployee ? "📌 This field can only be edited by admins" : ""}
+                sx={{
+                  '& .MuiInputBase-input.Mui-disabled': {
+                    WebkitTextFillColor: 'rgba(0, 0, 0, 0.87)',
+                    cursor: 'not-allowed',
+                  },
+                }}
+              />
 
-              {/* Description Field - ADMIN only */}
-              {!isEmployee && (
-                <TextField
-                  fullWidth
-                  label="Descripción"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  multiline
-                  rows={3}
-                  placeholder="Detalles de la tarea..."
-                />
-              )}
+              {/* Description Field - Read-only for EMPLOYEE */}
+              <TextField
+                fullWidth
+                label="Task Description"
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                disabled={isEmployee}
+                multiline
+                rows={3}
+                placeholder="Task requirements and details..."
+                helperText={isEmployee ? "📋 Instructions from admin - what needs to be done" : "Detailed instructions for the assignee"}
+                sx={{
+                  '& .MuiInputBase-input.Mui-disabled': {
+                    WebkitTextFillColor: 'rgba(0, 0, 0, 0.87)',
+                    cursor: 'not-allowed',
+                  },
+                }}
+              />
 
               {/* Status Field */}
               <TextField
                 fullWidth
                 select
-                label="Estado"
+                label="Status"
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
-                helperText="Actualiza el estado actual de la tarea"
+                helperText={
+                  formData.status === "PENDING" && !taskInfo?.startDate
+                    ? "💡 Changing to IN_PROGRESS will automatically set the start date"
+                    : "Update the current task status"
+                }
               >
                 <MenuItem value="PENDING">
                   <Stack direction="row" spacing={1} alignItems="center">
@@ -419,14 +462,14 @@ export default function EditTask() {
               {/* Work Description Field */}
               <TextField
                 fullWidth
-                label="Descripción del Trabajo Realizado"
+                label="Work Description"
                 name="workDescription"
                 value={formData.workDescription}
                 onChange={handleChange}
                 multiline
                 rows={4}
-                placeholder="Describe el trabajo completado en esta tarea..."
-                helperText="Documenta lo que se realizó en esta tarea"
+                placeholder="Document what you did, challenges faced, solutions implemented..."
+                helperText="📝 What did you accomplish? (visible to admins and for reporting)"
               />
 
               {/* Error Alert */}
@@ -443,7 +486,7 @@ export default function EditTask() {
                   onClick={() => navigate("/tasks")}
                   disabled={loading}
                 >
-                  Cancelar
+                  Cancel
                 </Button>
                 <Button
                   type="submit"
@@ -454,7 +497,7 @@ export default function EditTask() {
                     minWidth: 150,
                   }}
                 >
-                  {loading ? "Guardando..." : "Guardar Cambios"}
+                  {loading ? "Saving..." : "Save Changes"}
                 </Button>
               </Stack>
             </Stack>
@@ -472,9 +515,17 @@ export default function EditTask() {
                 mb: 3,
               }}
             >
-              <Typography variant="h6" fontWeight="bold">
-                ⏱️ Registros de Tiempo
-              </Typography>
+              <Box>
+                <Typography variant="h6" fontWeight="bold">
+                  ⏱️ Time Tracking
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {isEmployee
+                    ? "Track the hours you've worked on this task"
+                    : "View and manage time entries for this task"
+                  }
+                </Typography>
+              </Box>
               <Button
                 size="small"
                 variant="contained"
@@ -489,7 +540,7 @@ export default function EditTask() {
                   setTimeEntryDialogOpen(true);
                 }}
               >
-                Agregar Registro
+                Add Time Entry
               </Button>
             </Box>
 
@@ -498,27 +549,40 @@ export default function EditTask() {
               <Table size="small">
                 <TableHead>
                   <TableRow sx={{ bgcolor: "grey.50" }}>
-                    <TableCell>Fecha</TableCell>
-                    <TableCell align="center">Horas</TableCell>
-                    <TableCell>Descripción</TableCell>
-                    <TableCell align="right">Acciones</TableCell>
+                    <TableCell>Date</TableCell>
+                    {user?.role === "ADMIN" && <TableCell>Logged By</TableCell>}
+                    <TableCell align="center">Hours</TableCell>
+                    <TableCell>Description</TableCell>
+                    <TableCell align="right">Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {timeEntries.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={4} align="center" sx={{ py: 3 }}>
-                        <Typography variant="body2" color="text.secondary">
-                          No hay registros de tiempo
+                      <TableCell colSpan={user?.role === "ADMIN" ? 5 : 4} align="center" sx={{ py: 3 }}>
+                        <Typography variant="body2" color="text.secondary" gutterBottom>
+                          No time entries yet. Click "Add Time Entry" to start tracking your work.
                         </Typography>
+                        {isEmployee && (
+                          <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
+                            💡 Tip: Log your hours daily for accurate time tracking
+                          </Typography>
+                        )}
                       </TableCell>
                     </TableRow>
                   ) : (
                     timeEntries.map((entry) => (
                       <TableRow key={entry.id}>
                         <TableCell>
-                          {new Date(entry.date).toLocaleDateString("es-ES")}
+                          {new Date(entry.date).toLocaleDateString("en-US")}
                         </TableCell>
+                        {user?.role === "ADMIN" && (
+                          <TableCell>
+                            <Typography variant="body2" fontSize="0.85rem">
+                              {entry.user.name}
+                            </Typography>
+                          </TableCell>
+                        )}
                         <TableCell align="center" sx={{ fontWeight: 600 }}>
                           {entry.hoursWorked}h
                         </TableCell>
@@ -531,15 +595,17 @@ export default function EditTask() {
                           <IconButton
                             size="small"
                             onClick={() => handleEditTimeEntry(entry)}
-                            title="Editar"
+                            title="Edit"
+                            disabled={user?.role !== "ADMIN" && entry.user.id !== user?.id}
                           >
                             <EditIcon fontSize="small" />
                           </IconButton>
                           <IconButton
                             size="small"
                             onClick={() => setDeleteTimeEntryId(entry.id)}
-                            title="Eliminar"
+                            title="Delete"
                             sx={{ color: "error.main", ml: 1 }}
+                            disabled={user?.role !== "ADMIN" && entry.user.id !== user?.id}
                           >
                             <DeleteIcon fontSize="small" />
                           </IconButton>
@@ -554,7 +620,7 @@ export default function EditTask() {
             {/* Summary */}
             <Box sx={{ mt: 3, pt: 2, borderTop: 1, borderColor: "divider" }}>
               <Typography variant="body2" color="text.secondary">
-                <strong>Total de Horas Registradas:</strong>{" "}
+                <strong>Total Hours Logged:</strong>{" "}
                 {timeEntries.reduce((sum, t) => sum + t.hoursWorked, 0)}h
               </Typography>
             </Box>
@@ -571,15 +637,15 @@ export default function EditTask() {
           <Box sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
               {editingTimeEntry
-                ? "Editar Registro de Tiempo"
-                : "Nuevo Registro de Tiempo"}
+                ? "Edit Time Entry"
+                : "New Time Entry"}
             </Typography>
 
             <Stack spacing={2} sx={{ mt: 2 }}>
               <TextField
                 fullWidth
                 type="date"
-                label="Fecha"
+                label="Date"
                 name="date"
                 value={timeEntryForm.date}
                 onChange={handleTimeEntryChange}
@@ -590,35 +656,35 @@ export default function EditTask() {
                 fullWidth
                 type="number"
                 inputProps={{ step: 0.5, min: 0 }}
-                label="Horas Trabajadas"
+                label="Hours Worked"
                 name="hoursWorked"
                 value={timeEntryForm.hoursWorked}
                 onChange={handleTimeEntryChange}
-                placeholder="ej: 3.5"
+                placeholder="e.g., 3.5"
               />
 
               <TextField
                 fullWidth
-                label="Descripción"
+                label="Description"
                 name="description"
                 value={timeEntryForm.description}
                 onChange={handleTimeEntryChange}
                 multiline
                 rows={3}
-                placeholder="¿Qué hiciste?"
+                placeholder="What did you work on?"
               />
 
               {error && <Alert severity="error">{error}</Alert>}
 
               <Stack direction="row" spacing={2} justifyContent="flex-end">
                 <Button onClick={() => setTimeEntryDialogOpen(false)}>
-                  Cancelar
+                  Cancel
                 </Button>
                 <Button
                   variant="contained"
                   onClick={handleAddTimeEntry}
                 >
-                  {editingTimeEntry ? "Actualizar" : "Agregar"}
+                  {editingTimeEntry ? "Update" : "Add"}
                 </Button>
               </Stack>
             </Stack>
@@ -632,21 +698,21 @@ export default function EditTask() {
         >
           <Box sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
-              ¿Eliminar registro de tiempo?
+              Delete time entry?
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Esta acción no se puede deshacer.
+              This action cannot be undone.
             </Typography>
             <Stack direction="row" spacing={2} justifyContent="flex-end">
               <Button onClick={() => setDeleteTimeEntryId(null)}>
-                Cancelar
+                Cancel
               </Button>
               <Button
                 variant="contained"
                 color="error"
                 onClick={handleDeleteTimeEntry}
               >
-                Eliminar
+                Delete
               </Button>
             </Stack>
           </Box>

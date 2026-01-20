@@ -100,7 +100,7 @@ export default function Dashboard() {
               onClick={() => navigate("/tasks")}
             >
               <CardContent>
-                <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3   }}>
+                <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
                   <Avatar
                     sx={{
                       bgcolor: "primary.light",
@@ -114,14 +114,14 @@ export default function Dashboard() {
                     <ArrowForwardIcon />
                   </IconButton>
                 </Box>
-                
+
                 <Typography variant="body2" color="text.secondary" gutterBottom>
                   Total Tasks
                 </Typography>
                 <Typography variant="h3" fontWeight="bold" gutterBottom>
                   {loading ? "..." : stats.totalTasks.toLocaleString()}
                 </Typography>
-                
+
                 <Box
                   sx={{
                     display: "flex",
@@ -132,7 +132,7 @@ export default function Dashboard() {
                   }}
                 >
                 </Box>
-                
+
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 0 }}>
                   Click to view all tasks and their details
                 </Typography>
@@ -169,14 +169,14 @@ export default function Dashboard() {
                       <ArrowForwardIcon />
                     </IconButton>
                   </Box>
-                  
+
                   <Typography variant="body2" color="text.secondary" gutterBottom>
                     Total Users
                   </Typography>
                   <Typography variant="h3" fontWeight="bold" gutterBottom>
                     {loading ? "..." : stats.totalUsers.toLocaleString()}
                   </Typography>
-                  
+
                   <Box
                     sx={{
                       display: "flex",
@@ -187,7 +187,7 @@ export default function Dashboard() {
                     }}
                   >
                   </Box>
-                  
+
                   <Typography variant="body2" color="text.secondary" sx={{ mt: 0 }}>
                     Manage user accounts and permissions
                   </Typography>
@@ -225,14 +225,14 @@ export default function Dashboard() {
                       <ArrowForwardIcon />
                     </IconButton>
                   </Box>
-                  
+
                   <Typography variant="body2" color="text.secondary" gutterBottom>
                     Total Departments
                   </Typography>
                   <Typography variant="h3" fontWeight="bold" gutterBottom>
                     {loading ? "..." : stats.totalDepartments.toLocaleString()}
                   </Typography>
-                  
+
                   <Box
                     sx={{
                       display: "flex",
@@ -243,7 +243,7 @@ export default function Dashboard() {
                     }}
                   >
                   </Box>
-                  
+
                   <Typography variant="body2" color="text.secondary" sx={{ mt: 0 }}>
                     View and organize departments
                   </Typography>
@@ -263,26 +263,7 @@ export default function Dashboard() {
           </Typography>
 
           <Grid container spacing={2}>
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <Card
-                sx={{
-                  cursor: "pointer",
-                  transition: "all 0.2s",
-                  "&:hover": {
-                    bgcolor: "primary.light",
-                    color: "primary.contrastText",
-                  },
-                }}
-                onClick={() => navigate("/tasks/create")}
-              >
-                <CardContent sx={{ textAlign: "center", py: 3 }}>
-                  <AssignmentIcon sx={{ fontSize: 40, mb: 1 }} />
-                  <Typography variant="body1" fontWeight={600}>
-                    Create New Task
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
+
 
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <Card
@@ -307,6 +288,26 @@ export default function Dashboard() {
 
             {user?.role === "ADMIN" && (
               <>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                  <Card
+                    sx={{
+                      cursor: "pointer",
+                      transition: "all 0.2s",
+                      "&:hover": {
+                        bgcolor: "primary.light",
+                        color: "primary.contrastText",
+                      },
+                    }}
+                    onClick={() => navigate("/tasks/create")}
+                  >
+                    <CardContent sx={{ textAlign: "center", py: 3 }}>
+                      <AssignmentIcon sx={{ fontSize: 40, mb: 1 }} />
+                      <Typography variant="body1" fontWeight={600}>
+                        Create New Task
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
                 <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                   <Card
                     sx={{

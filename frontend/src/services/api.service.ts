@@ -27,12 +27,14 @@ class APIService {
     };
   }
 
-  private async handleResponse<T>(response: Response): Promise<T> {
+  private async handleResponse<T>(response: Response, skipAuthRedirect = false): Promise<T> {
     if (response.status === 401) {
-      const logout = getGlobalLogout();
-      logout?.();
-      window.location.href = "/login";
-      throw new Error("No autorizado");
+      if (!skipAuthRedirect) {
+        const logout = getGlobalLogout();
+        logout?.();
+        window.location.href = "/login";
+      }
+      throw new Error("Credenciales incorrectas");
     }
 
     if (!response.ok) {
@@ -52,7 +54,7 @@ class APIService {
       body: JSON.stringify({ email, password }),
     });
 
-    return this.handleResponse<LoginResponse>(response);
+    return this.handleResponse<LoginResponse>(response, true);
   }
 
   // ========= TASKS =========

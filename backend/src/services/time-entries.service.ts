@@ -79,8 +79,8 @@ export class TimeEntriesService {
     }
 
     // Verificar permisos: ADMIN ve todos, EMPLOYEE solo si es suya
-    if (userRole === "EMPLOYEE" && task.assignedToId !== userId) {
-      throw new Error("No tienes permiso para ver los registros de esta tarea");
+    if (userId && userRole && userRole === "EMPLOYEE" && task.assignedToId !== userId) {
+      throw new Error("You can only view time entries for your tasks");
     }
 
     return await prisma.timeEntry.findMany({

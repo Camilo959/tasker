@@ -59,7 +59,7 @@ export default function CreateTask() {
       setDepartments(deptsData);
     } catch (err) {
       console.error("Error loading data:", err);
-      setError("Error al cargar usuarios y departamentos");
+      setError("Error loading users and departments");
     }
   };
 
@@ -76,12 +76,12 @@ export default function CreateTask() {
     setError("");
 
     if (!formData.title.trim()) {
-      setError("El título es requerido");
+      setError("Title is required");
       return;
     }
 
     if (!formData.assignedToId) {
-      setError("Por favor asigna la tarea a un usuario");
+      setError("Please assign the task to a user");
       return;
     }
 
@@ -95,13 +95,13 @@ export default function CreateTask() {
           ? Number(formData.departmentId)
           : null,
       });
-      alert("✅ Tarea creada correctamente");
+      alert("✅ Task created successfully");
       navigate("/tasks");
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError("Error al crear la tarea");
+        setError("Error creating task");
       }
     } finally {
       setLoading(false);
@@ -140,19 +140,20 @@ export default function CreateTask() {
                 required
                 placeholder="e.g., Complete Q4 Financial Report"
                 autoFocus
+                helperText="Use a clear, action-oriented title"
               />
 
               {/* Description Field */}
               <TextField
                 fullWidth
-                label="Description"
+                label="Task Description"
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
                 multiline
                 rows={4}
-                placeholder="Enter task details and requirements..."
-                helperText="Provide clear instructions and context for this task"
+                placeholder="What needs to be done? Provide detailed requirements and context..."
+                helperText="📋 Instructions for the assignee - be specific about deliverables and expectations"
               />
 
               {/* Assigned User and Department - Two Columns */}
@@ -258,9 +259,10 @@ export default function CreateTask() {
             sx={{ pl: 2, mt: 1 }}
           >
             <li>Use clear, action-oriented titles</li>
-            <li>Provide detailed descriptions with requirements</li>
+            <li>Provide detailed descriptions with requirements and deliverables</li>
             <li>Assign to the most appropriate team member</li>
             <li>Include deadlines or priority information in the description</li>
+            <li>The task will start with status "PENDING" and the start date will be set automatically when work begins</li>
           </Typography>
         </Paper>
       </Container>

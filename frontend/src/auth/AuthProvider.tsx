@@ -1,13 +1,7 @@
 // auth/AuthProvider.tsx
 import { useState, type ReactNode } from "react";
-import { AuthContext } from "./context";
+import { AuthContext, type BackendUser, type User } from "./context";
 import { setGlobalLogout } from "./authBridge";
-
-interface User {
-  id: number;
-  role: string;
-  name?: string;
-}
 
 interface Props {
   children: ReactNode;
@@ -22,10 +16,16 @@ export const AuthProvider = ({ children }: Props) => {
     storedUser ? JSON.parse(storedUser) : null
   );
 
-  const login = (token: string, userData?: User) => {
+  // login mapea BackendUser a User
+  const login = (token: string, userData?: BackendUser) => {
+    const formattedUser: User | null = userData
+      ? { ...userData, id: userData.userId } // mapear userId → id
+      : null;
+
     localStorage.setItem("token", token);
-    if (userData) localStorage.setItem("user", JSON.stringify(userData));
-    setUser(userData || null);
+    if (formattedUser) localStorage.setItem("user", JSON.stringify(formattedUser));
+
+    setUser(formattedUser);
     setIsAuthenticated(true);
   };
 
@@ -36,7 +36,7 @@ export const AuthProvider = ({ children }: Props) => {
     setIsAuthenticated(false);
   };
 
-  // 👇 Registramos logout para axios
+  // logout global para axios
   setGlobalLogout(logout);
 
   return (

@@ -87,10 +87,19 @@ export class TasksService {
       throw new Error("Tarea no encontrada");
     }
 
-    // ✅ Verificar permisos de edición por campo
     this.validateEditPermissions(userRole, userId, data, task.assignedToId);
 
-    return await prisma.task.update({
+    if (data.hoursSpent !== undefined) {
+      console.warn("⚠️ hoursSpent no debe ser editado directamente.");
+      delete data.hoursSpent;
+    }
+
+    // ✅ NUEVO: Establecer startDate automáticamente
+    if (data.status === "IN_PROGRESS" && !task.startDate) {
+      data.startDate = new Date();
+    }
+
+    const updated = await prisma.task.update({
       where: { id: taskId },
       data: {
         title: data.title,
@@ -98,7 +107,6 @@ export class TasksService {
         status: data.status,
         startDate: data.startDate,
         workDescription: data.workDescription,
-        // ⚠️ hoursSpent se calcula automáticamente desde TimeEntry
       },
       include: {
         assignedTo: {
@@ -111,6 +119,14 @@ export class TasksService {
         timeEntries: true,
       },
     });
+
+    return {
+      ...updated,
+      hoursSpent: updated.timeEntries.reduce(
+        (sum, entry) => sum + entry.hoursWorked,
+        0
+      ),
+    };
   }
 
   async getTasks(filters: TaskFilters) {

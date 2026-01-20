@@ -144,9 +144,6 @@ export default function Tasks() {
     });
   };
 
-  const canEditTask = (task: Task) => {
-    return user?.role === "ADMIN" || task.assignedToId === user?.id;
-  };
 
   // WARNING
   const canDeleteTask = (task: Task) => {
@@ -455,14 +452,12 @@ export default function Tasks() {
                       
                       <TableCell align="right">
                         <Stack direction="row" spacing={0.5} justifyContent="flex-end">
-                          {canEditTask(task) && (
-                            <IconButton
+                          <IconButton
                               size="small"
                               onClick={() => navigate(`/tasks/edit/${task.id}`)}
                             >
                               <EditIcon fontSize="small" />
                             </IconButton>
-                          )}
                           {canDeleteTask(task) && (
                             <IconButton
                               size="small"

@@ -25,6 +25,8 @@ export default function Login() {
 
     try {
       const res = await apiService.login(email, password);
+      console.log("Auth user after login:", res.user);
+console.log("Auth user from context:", res.user);
 
       if (rememberMe) {
         localStorage.setItem("token", res.token);
