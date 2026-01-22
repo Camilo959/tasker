@@ -5,16 +5,14 @@ import { Box, Container } from "@mui/material";
 import { LoginHeader, LoginForm, LoginFooter } from "../../components/auth";
 import { apiService } from "../../services/api.service";
 import { useAuth } from "../../auth/useAuth";
-import type { User } from "../../types/user";
-
 
 export default function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -25,19 +23,9 @@ export default function Login() {
 
     try {
       const res = await apiService.login(email, password);
-      console.log("Auth user after login:", res.user);
-console.log("Auth user from context:", res.user);
 
-      if (rememberMe) {
-        localStorage.setItem("token", res.token);
-      } else {
-        sessionStorage.setItem("token", res.token);
-      }
-
-      // Aquí puedes hacer un cast si es necesario
-      login(res.token, res.user as User);
+      login(res.token, res.user);
       navigate("/dashboard");
-
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
@@ -48,7 +36,6 @@ console.log("Auth user from context:", res.user);
       setLoading(false);
     }
   };
-
 
   return (
     <Box
@@ -81,8 +68,6 @@ console.log("Auth user from context:", res.user);
           setPassword={setPassword}
           showPassword={showPassword}
           setShowPassword={setShowPassword}
-          rememberMe={rememberMe}
-          setRememberMe={setRememberMe}
           error={error}
           setError={setError}
           loading={loading}

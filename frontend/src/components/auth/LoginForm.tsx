@@ -5,9 +5,6 @@ import {
   Typography,
   IconButton,
   InputAdornment,
-  Checkbox,
-  FormControlLabel,
-  Link,
   Alert,
   CircularProgress,
   Avatar,
@@ -23,8 +20,6 @@ interface LoginFormProps {
   setPassword: (value: string) => void;
   showPassword: boolean;
   setShowPassword: (value: boolean) => void;
-  rememberMe: boolean;
-  setRememberMe: (value: boolean) => void;
   error: string;
   setError: (value: string) => void;
   loading: boolean;
@@ -38,8 +33,6 @@ export default function LoginForm({
   setPassword,
   showPassword,
   setShowPassword,
-  rememberMe,
-  setRememberMe,
   error,
   setError,
   loading,
@@ -87,7 +80,7 @@ export default function LoginForm({
 
       {/* Login Form */}
       <Box component="form" onSubmit={onSubmit}>
-        <Stack spacing={4} marginTop={3} >
+        <Stack spacing={4} marginTop={3}>
           {/* Email Field */}
           <TextField
             fullWidth
@@ -127,35 +120,6 @@ export default function LoginForm({
               },
             }}
           />
-
-          {/* Remember Me & Forgot Password */}
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  size="small"
-                />
-              }
-              label={<Typography variant="body2">Remember me</Typography>}
-            />
-            <Link
-              href="#"
-              variant="body2"
-              color="primary"
-              underline="hover"
-              fontWeight={600}
-            >
-              Forgot password?
-            </Link>
-          </Box>
 
           {/* Submit Button */}
           <Button

@@ -18,7 +18,6 @@ import {
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import {
-  TrendingUp as TrendingUpIcon,
   CorporateFare as CorporateFareIcon,
   Add as AddIcon,
   Edit as EditIcon,
@@ -172,20 +171,6 @@ export default function Departments() {
                   <Typography variant="h3" fontWeight="bold">
                     {loading ? "..." : stats.totalDepartments}
                   </Typography>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 0.5,
-                      mt: 1,
-                      color: "success.main",
-                    }}
-                  >
-                    <TrendingUpIcon sx={{ fontSize: 16 }} />
-                    <Typography variant="body2" fontWeight={600}>
-                      +2 this quarter
-                    </Typography>
-                  </Box>
                 </Box>
                 <Avatar
                   sx={{
@@ -211,19 +196,6 @@ export default function Departments() {
                   <Typography variant="h3" fontWeight="bold">
                     {loading ? "..." : stats.totalMembers}
                   </Typography>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 0.5,
-                      mt: 1,
-                      color: "info.main",
-                    }}
-                  >
-                    <Typography variant="body2" fontWeight={600}>
-                      Across all departments
-                    </Typography>
-                  </Box>
                 </Box>
                 <Avatar
                   sx={{
@@ -249,19 +221,6 @@ export default function Departments() {
                   <Typography variant="h3" fontWeight="bold">
                     {loading ? "..." : stats.averageMembers}
                   </Typography>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 0.5,
-                      mt: 1,
-                      color: "secondary.main",
-                    }}
-                  >
-                    <Typography variant="body2" fontWeight={600}>
-                      Per department
-                    </Typography>
-                  </Box>
                 </Box>
                 <Avatar
                   sx={{

@@ -26,8 +26,6 @@ import {
   Pending as PendingIcon,
   CheckCircle as CheckCircleIcon,
   Add as AddIcon,
-  FilterList as FilterListIcon,
-  FileDownload as FileDownloadIcon,
   Edit as EditIcon,
   Timer as TimerIcon,
   Delete as DeleteIcon,
@@ -336,24 +334,6 @@ export default function Tasks() {
             <Typography variant="h6" fontWeight="bold">
               All Tasks
             </Typography>
-            <Stack direction="row" spacing={1}>
-              <Button
-                size="small"
-                variant="outlined"
-                startIcon={<FilterListIcon />}
-                sx={{ textTransform: "none" }}
-              >
-                Filter
-              </Button>
-              <Button
-                size="small"
-                variant="outlined"
-                startIcon={<FileDownloadIcon />}
-                sx={{ textTransform: "none" }}
-              >
-                Export
-              </Button>
-            </Stack>
           </Box>
 
           {/* Table */}

@@ -24,7 +24,6 @@ import {
   Assignment as AssignmentIcon,
   People as PeopleIcon,
   CorporateFare as DepartmentIcon,
-  BarChart as ReportsIcon,
   Settings as SettingsIcon,
   Search as SearchIcon,
   TaskAlt as TaskAltIcon,
@@ -63,7 +62,6 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
     { text: "Tasks", icon: <AssignmentIcon />, path: "/tasks", roles: ["ADMIN", "EMPLOYEE"] },
     { text: "Users", icon: <PeopleIcon />, path: "/users", roles: ["ADMIN"] },
     { text: "Departments", icon: <DepartmentIcon />, path: "/departments", roles: ["ADMIN"] },
-    { text: "Reports", icon: <ReportsIcon />, path: "/reports", roles: ["ADMIN"] },
   ];
 
   const filteredMenuItems = menuItems.filter(item =>

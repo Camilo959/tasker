@@ -23,14 +23,11 @@ import {
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import {
-  TrendingUp as TrendingUpIcon,
   People as PeopleIcon,
   PersonAdd as PersonAddIcon,
   AdminPanelSettings as AdminIcon,
   Search as SearchIcon,
   Edit as EditIcon,
-  FilterList as FilterListIcon,
-  FileDownload as FileDownloadIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { MainLayout } from "../../components/layout/MainLayout";
@@ -165,20 +162,6 @@ export default function Users() {
                   <Typography variant="h3" fontWeight="bold">
                     {loading ? "..." : stats.totalUsers}
                   </Typography>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 0.5,
-                      mt: 1,
-                      color: "success.main",
-                    }}
-                  >
-                    <TrendingUpIcon sx={{ fontSize: 16 }} />
-                    <Typography variant="body2" fontWeight={600}>
-                      +8% new members
-                    </Typography>
-                  </Box>
                 </Box>
                 <Avatar
                   sx={{
@@ -204,22 +187,6 @@ export default function Users() {
                   <Typography variant="h3" fontWeight="bold">
                     {loading ? "..." : stats.activeUsers}
                   </Typography>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 0.5,
-                      mt: 1,
-                      color: "success.main",
-                    }}
-                  >
-                    <Typography variant="body2" fontWeight={600}>
-                      {stats.totalUsers > 0
-                        ? `${Math.round((stats.activeUsers / stats.totalUsers) * 100)}%`
-                        : "0%"}{" "}
-                      active rate
-                    </Typography>
-                  </Box>
                 </Box>
                 <Avatar
                   sx={{
@@ -245,19 +212,6 @@ export default function Users() {
                   <Typography variant="h3" fontWeight="bold">
                     {loading ? "..." : stats.adminUsers}
                   </Typography>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 0.5,
-                      mt: 1,
-                      color: "info.main",
-                    }}
-                  >
-                    <Typography variant="body2" fontWeight={600}>
-                      Full access level
-                    </Typography>
-                  </Box>
                 </Box>
                 <Avatar
                   sx={{
@@ -283,19 +237,6 @@ export default function Users() {
                   <Typography variant="h3" fontWeight="bold">
                     {loading ? "..." : stats.employeeUsers}
                   </Typography>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 0.5,
-                      mt: 1,
-                      color: "secondary.main",
-                    }}
-                  >
-                    <Typography variant="body2" fontWeight={600}>
-                      Standard access
-                    </Typography>
-                  </Box>
                 </Box>
                 <Avatar
                   sx={{
@@ -372,23 +313,6 @@ export default function Users() {
                   }}
                 />
               </Box>
-
-              <Button
-                size="small"
-                variant="outlined"
-                startIcon={<FilterListIcon />}
-                sx={{ textTransform: "none" }}
-              >
-                Filter
-              </Button>
-              <Button
-                size="small"
-                variant="outlined"
-                startIcon={<FileDownloadIcon />}
-                sx={{ textTransform: "none" }}
-              >
-                Export
-              </Button>
             </Stack>
           </Box>
 

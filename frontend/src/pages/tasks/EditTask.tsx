@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   Container,
@@ -68,11 +68,7 @@ export default function EditTask() {
   const [editingTimeEntry, setEditingTimeEntry] = useState<TimeEntry | null>(null);
   const [deleteTimeEntryId, setDeleteTimeEntryId] = useState<number | null>(null);
 
-  useEffect(() => {
-    fetchTask();
-  }, [id]);
-
-  const fetchTask = async () => {
+  const fetchTask = useCallback(async () => {
     try {
       setInitialLoading(true);
       const tasks = await apiService.getTasks();
@@ -87,14 +83,7 @@ export default function EditTask() {
           workDescription: task.workDescription || "",
         });
 
-        // === Aquí es donde verificas los time entries ===
-      console.log("User role:", user?.role);
-      console.log("Task assignedToId:", task.assignedTo.id);
-      console.log("Current userId:", user?.id);
-
-        // Load TimeEntries
         if (user?.role === "ADMIN" || task.assignedTo.id === user?.id) {
-          console.log("Fetching time entries for task:", task.id); // 🧪 Debug
           const entries = await apiService.getTimeEntriesByTask(task.id);
           setTimeEntries(entries);
         }
@@ -108,7 +97,11 @@ export default function EditTask() {
     } finally {
       setInitialLoading(false);
     }
-  };
+  }, [id, user]);
+
+  useEffect(() => {
+    fetchTask();
+  }, [fetchTask]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -117,7 +110,7 @@ export default function EditTask() {
       [name]: value,
     }));
   };
-
+  
   const handleTimeEntryChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {

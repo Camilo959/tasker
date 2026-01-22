@@ -1,6 +1,6 @@
-import type { User } from "./user";
+import type { BackendUser } from "../auth/context";
 
 export interface LoginResponse {
   token: string;
-  user: User;
+  user: BackendUser;
 }

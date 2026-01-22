@@ -3,7 +3,7 @@ import { createContext } from "react";
 
 // Tipo que usamos internamente en el frontend
 export interface User {
-  id: number;    // frontend usa `id`
+  id: number;
   role: string;
   name?: string;
   email?: string;
@@ -11,7 +11,7 @@ export interface User {
 
 // Tipo que viene del backend
 export interface BackendUser {
-  userId: number;  // backend usa `userId`
+  userId: number;
   role: string;
   name: string;
   email: string;
@@ -19,7 +19,7 @@ export interface BackendUser {
 
 export interface AuthContextType {
   user: User | null;
-  login: (token: string, user?: BackendUser) => void; // ahora acepta BackendUser
+  login: (token: string, user?: BackendUser) => void;
   logout: () => void;
   isAuthenticated: boolean;
 }

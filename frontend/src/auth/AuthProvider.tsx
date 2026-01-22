@@ -16,10 +16,9 @@ export const AuthProvider = ({ children }: Props) => {
     storedUser ? JSON.parse(storedUser) : null
   );
 
-  // login mapea BackendUser a User
   const login = (token: string, userData?: BackendUser) => {
     const formattedUser: User | null = userData
-      ? { ...userData, id: userData.userId } // mapear userId → id
+      ? { ...userData, id: userData.userId }
       : null;
 
     localStorage.setItem("token", token);
