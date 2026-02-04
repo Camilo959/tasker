@@ -37,6 +37,10 @@ export class TimeEntriesController {
       if (error.message.includes("horas trabajadas")) {
         return res.status(400).json({ error: error.message });
       }
+      // ✅ AGREGAR: Manejo específico para límite diario
+      if (error.message.includes("Límite diario excedido")) {
+        return res.status(400).json({ error: error.message });
+      }
       res.status(500).json({ error: "Error al crear registro de tiempo" });
     }
   }
@@ -107,6 +111,10 @@ export class TimeEntriesController {
         return res.status(403).json({ error: error.message });
       }
       if (error.message.includes("horas trabajadas")) {
+        return res.status(400).json({ error: error.message });
+      }
+      // ✅ AGREGAR: Manejo específico para límite diario
+      if (error.message.includes("Límite diario excedido")) {
         return res.status(400).json({ error: error.message });
       }
       res.status(500).json({ error: "Error al actualizar registro de tiempo" });

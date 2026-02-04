@@ -40,6 +40,8 @@ export class TimeEntriesService {
     if (data.hoursWorked <= 0) {
       throw new Error("Las horas trabajadas deben ser mayor a 0");
     }
+    // ✅ AGREGAR AQUÍ: Validar límite de 12 horas por día
+    await this.validateDailyHoursLimit(userId, data.date, data.hoursWorked);
 
     // Crear TimeEntry
     const timeEntry = await prisma.timeEntry.create({
@@ -60,6 +62,53 @@ export class TimeEntriesService {
     await this.updateTaskTotalHours(data.taskId);
 
     return timeEntry;
+  }
+
+  /**
+   * ✅ NUEVA FUNCIÓN: Validar límite de 12 horas por día
+   */
+  private async validateDailyHoursLimit(
+    userId: number,
+    date: Date,
+    newHours: number,
+    excludeEntryId?: number
+  ): Promise<void> {
+    // Normalizar la fecha para comparar solo día (ignorar horas/minutos)
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    // Obtener todos los time entries del usuario en ese día
+    const existingEntries = await prisma.timeEntry.findMany({
+      where: {
+        userId,
+        date: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
+        // Excluir el entry que se está editando (si aplica)
+        ...(excludeEntryId && { id: { not: excludeEntryId } }),
+      },
+    });
+
+    // Calcular total de horas ya registradas
+    const totalExistingHours = existingEntries.reduce(
+      (sum, entry) => sum + entry.hoursWorked,
+      0
+    );
+
+    // Calcular total con las nuevas horas
+    const totalHours = totalExistingHours + newHours;
+
+    // Validar límite de 12 horas
+    if (totalHours > 12) {
+      throw new Error(
+        `Límite diario excedido. Ya tienes ${totalExistingHours.toFixed(1)}h registradas. ` +
+        `Intentas agregar ${newHours}h. Máximo permitido: 12h por día.`
+      );
+    }
   }
 
   /**
@@ -141,6 +190,20 @@ export class TimeEntriesService {
     // Validar horas si se proporciona
     if (data.hoursWorked !== undefined && data.hoursWorked <= 0) {
       throw new Error("Las horas trabajadas deben ser mayor a 0");
+    }
+
+    // ✅ AGREGAR AQUÍ: Validar límite si cambia fecha u horas
+    if (data.date || data.hoursWorked) {
+      const newDate = data.date || timeEntry.date;
+      const newHours = data.hoursWorked || timeEntry.hoursWorked;
+
+      // Validar excluyendo el entry actual del cálculo
+      await this.validateDailyHoursLimit(
+        timeEntry.userId,
+        newDate,
+        newHours,
+        timeEntryId  // ← Excluye este entry del total
+      );
     }
 
     const updated = await prisma.timeEntry.update({
