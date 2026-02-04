@@ -1,4 +1,4 @@
-import { Box, Avatar, Typography, Button } from "@mui/material";
+import { Box, Avatar, Typography } from "@mui/material";
 import { CheckIcon } from "../icons/index";
 
 export default function LoginHeader() {
@@ -6,7 +6,7 @@ export default function LoginHeader() {
     <Box
       sx={{
         px: 3,
-        py: 2,
+        py: 1,
         borderBottom: 1,
         borderColor: "divider",
         bgcolor: "background.paper",
@@ -29,9 +29,6 @@ export default function LoginHeader() {
           CorporateTask
         </Typography>
       </Box>
-      <Button variant="contained" size="small">
-        Help
-      </Button>
     </Box>
   );
 }
