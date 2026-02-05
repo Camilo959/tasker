@@ -25,7 +25,7 @@ export default function Login() {
       const res = await apiService.login(email, password);
 
       login(res.token, res.user);
-      navigate("/dashboard");
+      navigate("/home");
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);

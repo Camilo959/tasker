@@ -58,7 +58,7 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
   };
 
   const menuItems = [
-    { text: "Home", icon: <HomeIcon />, path: "/dashboard", roles: ["ADMIN", "EMPLOYEE"] },
+    { text: "Home", icon: <HomeIcon />, path: "/home", roles: ["ADMIN", "EMPLOYEE"] },
     { text: "Tasks", icon: <AssignmentIcon />, path: "/tasks", roles: ["ADMIN", "EMPLOYEE"] },
     { text: "Users", icon: <PeopleIcon />, path: "/users", roles: ["ADMIN"] },
     { text: "Departments", icon: <DepartmentIcon />, path: "/departments", roles: ["ADMIN"] },

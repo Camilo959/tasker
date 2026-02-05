@@ -15,7 +15,7 @@ export default function AdminRoute({ children }: Props) {
   }
 
   if (user?.role !== "ADMIN") {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/home" replace />;
   }
 
   return <>{children}</>;
