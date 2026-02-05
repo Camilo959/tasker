@@ -1,4 +1,4 @@
-// pages/Dashboard.tsx - Material UI Version (Solo Estadísticas Generales)
+// pages/Home.tsx - Material UI Version (Solo Estadísticas Generales)
 import { useState, useEffect } from "react";
 import {
   Box,
@@ -21,16 +21,16 @@ import { useAuth } from "../../auth/useAuth";
 import { MainLayout } from "../../components/layout/MainLayout";
 import { apiService } from "../../services/api.service";
 
-interface DashboardStats {
+interface HomeStats {
   totalTasks: number;
   totalUsers: number;
   totalDepartments: number;
 }
 
-export default function Dashboard() {
+export default function Home() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [stats, setStats] = useState<DashboardStats>({
+  const [stats, setStats] = useState<HomeStats>({
     totalTasks: 0,
     totalUsers: 0,
     totalDepartments: 0,
@@ -38,7 +38,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    const fetchHomeData = async () => {
       try {
         setLoading(true);
 
@@ -63,12 +63,12 @@ export default function Dashboard() {
           totalDepartments,
         });
       } catch (error) {
-        console.error("Error fetching dashboard data:", error);
+        console.error("Error fetching home data:", error);
       } finally {
         setLoading(false);
       }
     };
-    fetchDashboardData();
+    fetchHomeData();
   }, [user]);
 
   return (

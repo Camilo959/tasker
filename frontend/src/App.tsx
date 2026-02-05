@@ -6,7 +6,7 @@ import { CircularProgress, Box } from "@mui/material";
 
 // Lazy pages
 const Login = lazy(() => import("./pages/auth/Login"));
-const Dashboard = lazy(() => import("./pages/dashboard/Dashboard"));
+const Home = lazy(() => import("./pages/home/Home"));
 const Tasks = lazy(() => import("./pages/tasks/Tasks"));
 const CreateTask = lazy(() => import("./pages/tasks/CreateTask"));
 const EditTask = lazy(() => import("./pages/tasks/EditTask"));
@@ -39,10 +39,10 @@ function App() {
 
         {/* Protegidas */}
         <Route
-          path="/dashboard"
+          path="/home"
           element={
             <ProtectedRoute>
-              <Dashboard />
+              <Home />
             </ProtectedRoute>
           }
         />
@@ -123,8 +123,8 @@ function App() {
           }
         />
 
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/" element={<Navigate to="/home" replace />} />
+        <Route path="*" element={<Navigate to="/home" replace />} />
       </Routes>
     </Suspense>
   );
