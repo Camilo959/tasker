@@ -81,22 +81,20 @@ export class TasksService {
   ) {
     const task = await prisma.task.findUnique({
       where: { id: taskId },
+      include: { timeEntries: true }, // ← Incluir para recalcular horas
     });
 
     if (!task) {
       throw new Error("Tarea no encontrada");
     }
 
+    // ✅ Validar permisos
     this.validateEditPermissions(userRole, userId, data, task.assignedToId);
 
+    // ✅ IMPORTANTE: No permitir editar hoursSpent directamente
     if (data.hoursSpent !== undefined) {
-      console.warn("⚠️ hoursSpent no debe ser editado directamente.");
+      console.warn("⚠️ hoursSpent no debe ser editado directamente. Se calcula desde TimeEntries.");
       delete data.hoursSpent;
-    }
-
-    // ✅ NUEVO: Establecer startDate automáticamente
-    if (data.status === "IN_PROGRESS" && !task.startDate) {
-      data.startDate = new Date();
     }
 
     const updated = await prisma.task.update({
@@ -107,6 +105,7 @@ export class TasksService {
         status: data.status,
         startDate: data.startDate,
         workDescription: data.workDescription,
+        // hoursSpent se calcula automáticamente
       },
       include: {
         assignedTo: {
@@ -120,6 +119,7 @@ export class TasksService {
       },
     });
 
+    // ✅ Recalcular hoursSpent
     return {
       ...updated,
       hoursSpent: updated.timeEntries.reduce(

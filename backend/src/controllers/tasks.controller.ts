@@ -10,7 +10,7 @@ export class TasksController {
                 error: "Acceso denegado: solo ADMIN puede crear tareas"
             });
         }
-        
+
         // Validación
         if (!title || !assignedToId) {
             return res.status(400).json({ error: "Título y usuario asignado son requeridos" });
@@ -38,12 +38,33 @@ export class TasksController {
 
     async update(req: Request, res: Response) {
         const { id } = req.params;
-        const { title, description, status, startDate, hoursSpent, workDescription } = req.body;
+        const { title, description, status, startDate, workDescription } = req.body;
 
         try {
+            // ✅ Filtrar datos según rol
+            let updateData: any = {};
+
+            if (req.user!.role === "ADMIN") {
+                // ADMIN puede editar todo
+                updateData = {
+                    title,
+                    description,
+                    status,
+                    startDate,
+                    workDescription,
+                };
+            } else {
+                // EMPLOYEE solo puede editar estos campos
+                updateData = {
+                    status,
+                    startDate,
+                    workDescription,
+                };
+            }
+
             const task = await tasksService.updateTask(
                 Number(id),
-                { title, description, status, startDate, hoursSpent, workDescription },
+                updateData,
                 req.user!.userId,
                 req.user!.role
             );

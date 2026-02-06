@@ -4,13 +4,12 @@ import { authMiddleware } from "../middlewares/auth.middleware";
 
 const router = Router();
 
+// Obtener perfil del usuario autenticado
+router.get("/profile", authMiddleware, authController.getProfile);
+// Login
+router.post("/login", authController.login);
 // Registro de usuario (público o solo admin según implementes)
 router.post("/register", authController.register);
 
-// Login
-router.post("/login", authController.login);
-
-// Obtener perfil del usuario autenticado
-router.get("/profile", authMiddleware, authController.getProfile);
 
 export default router;
